@@ -1,4 +1,5 @@
 #include "tableCatalogue.h"
+#include "matrixCatalogue.h"
 
 using namespace std;
 
@@ -12,6 +13,7 @@ enum QueryType
     JOIN,
     LIST,
     LOAD,
+    LOAD_MATRIX,
     PRINT,
     PROJECTION,
     RENAME,
@@ -75,6 +77,7 @@ public:
     string joinSecondColumnName = "";
 
     string loadRelationName = "";
+    string loadMatrixName = "";
 
     string printRelationName = "";
 
@@ -114,6 +117,7 @@ bool syntacticParseINDEX();
 bool syntacticParseJOIN();
 bool syntacticParseLIST();
 bool syntacticParseLOAD();
+bool syntacticParseLOAD_MATRIX();
 bool syntacticParsePRINT();
 bool syntacticParsePROJECTION();
 bool syntacticParseRENAME();

@@ -1,4 +1,4 @@
-#include"syntacticParser.h"
+#include "syntacticParser.h"
 
 bool semanticParse();
 
@@ -10,6 +10,7 @@ bool semanticParseINDEX();
 bool semanticParseJOIN();
 bool semanticParseLIST();
 bool semanticParseLOAD();
+bool semanticParseLOAD_MATRIX();
 bool semanticParsePRINT();
 bool semanticParsePROJECTION();
 bool semanticParseRENAME();

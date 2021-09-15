@@ -1,58 +1,59 @@
 #include "global.h"
 
+// [debug] :edit /add /remove functions as per need for matrix
 /**
- * @brief Construct a new Table:: Table object
+ * @brief Construct a new Matrix:: Matrix object
  *
  */
-Table::Table()
+Matrix::Matrix()
 {
-    logger.log("Table::Table");
+    logger.log("Matrix::Matrix");
 }
 
 /**
- * @brief Construct a new Table:: Table object used in the case where the data
+ * @brief Construct a new Matrix:: Matrix object used in the case where the data
  * file is available and LOAD command has been called. This command should be
  * followed by calling the load function;
  *
- * @param tableName 
+ * @param matrixName 
  */
-Table::Table(string tableName)
+Matrix::Matrix(string matrixName)
 {
-    logger.log("Table::Table");
-    this->sourceFileName = "../data/" + tableName + ".csv";
-    this->tableName = tableName;
+    logger.log("Matrix::Matrix");
+    this->sourceFileName = "../data/" + matrixName + ".csv";
+    this->matrixName = matrixName;
 }
 
 /**
- * @brief Construct a new Table:: Table object used when an assignment command
- * is encountered. To create the table object both the table name and the
- * columns the table holds should be specified.
+ * @brief Construct a new Matrix:: Matrix object used when an assignment command
+ * is encountered. To create the matrix object both the matrix name and the
+ * columns the matrix holds should be specified.
  *
- * @param tableName 
+ * @param matrixName 
  * @param columns 
  */
-Table::Table(string tableName, vector<string> columns)
+Matrix::Matrix(string matrixName, vector<string> columns)
 {
-    logger.log("Table::Table");
-    this->sourceFileName = "../data/temp/" + tableName + ".csv";
-    this->tableName = tableName;
+    logger.log("Matrix::Matrix");
+    this->sourceFileName = "../data/temp/" + matrixName + ".csv";
+    this->matrixName = matrixName;
     this->columns = columns;
     this->columnCount = columns.size();
     this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * columnCount));
-    this->writeRow<string>(columns);
+    // this->writeRow<string>(columns);
 }
-
+// [debug] : edit below
 /**
  * @brief The load function is used when the LOAD command is encountered. It
- * reads data from the source file, splits it into blocks and updates table
+ * reads data from the source file, splits it into blocks and updates matrix
  * statistics.
  *
- * @return true if the table has been successfully loaded 
+ * @return true if the matrix has been successfully loaded 
  * @return false if an error occurred 
  */
-bool Table::load()
+bool Matrix::load()
 {
-    logger.log("Table::load");
+    logger.log("Matrix::load");
     fstream fin(this->sourceFileName, ios::in);
     string line;
     if (getline(fin, line))
@@ -75,9 +76,9 @@ bool Table::load()
  * repeats)
  * @return false otherwise
  */
-bool Table::extractColumnNames(string firstLine)
+bool Matrix::extractColumnNames(string firstLine)
 {
-    logger.log("Table::extractColumnNames");
+    logger.log("Matrix::extractColumnNames");
     unordered_set<string> columnNames;
     string word;
     stringstream s(firstLine);
@@ -101,9 +102,9 @@ bool Table::extractColumnNames(string firstLine)
  * @return true if successfully blockified
  * @return false otherwise
  */
-bool Table::blockify()
+bool Matrix::blockify()
 {
-    logger.log("Table::blockify");
+    logger.log("Matrix::blockify");
     ifstream fin(this->sourceFileName, ios::in);
     string line, word;
     vector<int> row(this->columnCount, 0);
@@ -128,7 +129,7 @@ bool Table::blockify()
         this->updateStatistics(row);
         if (pageCounter == this->maxRowsPerBlock)
         {
-            bufferManager.writePage(this->tableName, this->blockCount, rowsInPage, pageCounter);
+            bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
             this->blockCount++;
             this->rowsPerBlockCount.emplace_back(pageCounter);
             pageCounter = 0;
@@ -136,7 +137,7 @@ bool Table::blockify()
     }
     if (pageCounter)
     {
-        bufferManager.writePage(this->tableName, this->blockCount, rowsInPage, pageCounter);
+        bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
         this->blockCount++;
         this->rowsPerBlockCount.emplace_back(pageCounter);
         pageCounter = 0;
@@ -156,7 +157,7 @@ bool Table::blockify()
  *
  * @param row 
  */
-void Table::updateStatistics(vector<int> row)
+void Matrix::updateStatistics(vector<int> row)
 {
     this->rowCount++;
     for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
@@ -170,15 +171,15 @@ void Table::updateStatistics(vector<int> row)
 }
 
 /**
- * @brief Checks if the given column is present in this table.
+ * @brief Checks if the given column is present in this matrix.
  *
  * @param columnName 
  * @return true 
  * @return false 
  */
-bool Table::isColumn(string columnName)
+bool Matrix::isColumn(string columnName)
 {
-    logger.log("Table::isColumn");
+    logger.log("Matrix::isColumn");
     for (auto col : this->columns)
     {
         if (col == columnName)
@@ -197,9 +198,9 @@ bool Table::isColumn(string columnName)
  * @param fromColumnName 
  * @param toColumnName 
  */
-void Table::renameColumn(string fromColumnName, string toColumnName)
+void Matrix::renameColumn(string fromColumnName, string toColumnName)
 {
-    logger.log("Table::renameColumn");
+    logger.log("Matrix::renameColumn");
     for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
     {
         if (columns[columnCounter] == fromColumnName)
@@ -212,20 +213,20 @@ void Table::renameColumn(string fromColumnName, string toColumnName)
 }
 
 /**
- * @brief Function prints the first few rows of the table. If the table contains
+ * @brief Function prints the first few rows of the matrix. If the matrix contains
  * more rows than PRINT_COUNT, exactly PRINT_COUNT rows are printed, else all
  * the rows are printed.
  *
  */
-void Table::print()
+void Matrix::print()
 {
-    logger.log("Table::print");
+    logger.log("Matrix::print");
     uint count = min((long long)PRINT_COUNT, this->rowCount);
 
     //print headings
     this->writeRow(this->columns, cout);
 
-    Cursor cursor(this->tableName, 0);
+    Cursor cursor(this->matrixName, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < count; rowCounter++)
     {
@@ -236,15 +237,15 @@ void Table::print()
 }
 
 /**
- * @brief This function returns one row of the table using the cursor object. It
+ * @brief This function returns one row of the matrix using the cursor object. It
  * returns an empty row is all rows have been read.
  *
  * @param cursor 
  * @return vector<int> 
  */
-void Table::getNextPage(Cursor *cursor)
+void Matrix::getNextPage(Cursor *cursor)
 {
-    logger.log("Table::getNext");
+    logger.log("Matrix::getNext");
 
     if (cursor->pageIndex < this->blockCount - 1)
     {
@@ -257,18 +258,18 @@ void Table::getNextPage(Cursor *cursor)
  * folder.
  *
  */
-void Table::makePermanent()
+void Matrix::makePermanent()
 {
-    logger.log("Table::makePermanent");
+    logger.log("Matrix::makePermanent");
     if (!this->isPermanent())
         bufferManager.deleteFile(this->sourceFileName);
-    string newSourceFile = "../data/" + this->tableName + ".csv";
+    string newSourceFile = "../data/" + this->matrixName + ".csv";
     ofstream fout(newSourceFile, ios::out);
 
     //print headings
     this->writeRow(this->columns, fout);
 
-    Cursor cursor(this->tableName, 0);
+    Cursor cursor(this->matrixName, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
@@ -279,42 +280,42 @@ void Table::makePermanent()
 }
 
 /**
- * @brief Function to check if table is already exported
+ * @brief Function to check if matrix is already exported
  *
  * @return true if exported
  * @return false otherwise
  */
-bool Table::isPermanent()
+bool Matrix::isPermanent()
 {
-    logger.log("Table::isPermanent");
-    if (this->sourceFileName == "../data/" + this->tableName + ".csv")
+    logger.log("Matrix::isPermanent");
+    if (this->sourceFileName == "../data/" + this->matrixName + ".csv")
         return true;
     return false;
 }
 
 /**
- * @brief The unload function removes the table from the database by deleting
- * all temporary files created as part of this table
+ * @brief The unload function removes the matrix from the database by deleting
+ * all temporary files created as part of this matrix
  *
  */
-void Table::unload()
+void Matrix::unload()
 {
-    logger.log("Table::~unload");
+    logger.log("Matrix::~unload");
     for (int pageCounter = 0; pageCounter < this->blockCount; pageCounter++)
-        bufferManager.deleteFile(this->tableName, pageCounter);
+        bufferManager.deleteFile(this->matrixName, pageCounter);
     if (!isPermanent())
         bufferManager.deleteFile(this->sourceFileName);
 }
 
 /**
- * @brief Function that returns a cursor that reads rows from this table
+ * @brief Function that returns a cursor that reads rows from this matrix
  * 
  * @return Cursor 
  */
-Cursor Table::getCursor()
+Cursor Matrix::getCursor()
 {
-    logger.log("Table::getCursor");
-    Cursor cursor(this->tableName, 0);
+    logger.log("Matrix::getCursor");
+    Cursor cursor(this->matrixName, 0);
     return cursor;
 }
 /**
@@ -323,9 +324,9 @@ Cursor Table::getCursor()
  * @param columnName 
  * @return int 
  */
-int Table::getColumnIndex(string columnName)
+int Matrix::getColumnIndex(string columnName)
 {
-    logger.log("Table::getColumnIndex");
+    logger.log("Matrix::getColumnIndex");
     for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
     {
         if (this->columns[columnCounter] == columnName)

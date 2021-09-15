@@ -21,9 +21,11 @@ vector<int> Cursor::getNext()
     logger.log("Cursor::geNext");
     vector<int> result = this->page.getRow(this->pagePointer);
     this->pagePointer++;
-    if(result.empty()){
+    if (result.empty())
+    {
         tableCatalogue.getTable(this->tableName)->getNextPage(this);
-        if(!this->pagePointer){
+        if (!this->pagePointer)
+        {
             result = this->page.getRow(this->pagePointer);
             this->pagePointer++;
         }

@@ -1,12 +1,14 @@
-#include "cursor.h"
+// #include "cursor.h"
 
-enum IndexingStrategy
-{
-    BTREE,
-    HASH,
-    NOTHING
-};
+// [debug] : Indexing strategy not needed for matrix (?)
+// enum IndexingStrategy
+// {
+//     BTREE,
+//     HASH,
+//     NOTHING
+// };
 
+//[debug] change below @brief for matrix
 /**
  * @brief The Table class holds all information related to a loaded table. It
  * also implements methods that interact with the parsers, executors, cursors
@@ -16,13 +18,16 @@ enum IndexingStrategy
  * JOIN, SORT, CROSS and DISTINCT). 
  *
  */
-class Table
+
+// [debug] : remove unwanted functions from below class
+// [debug] : add additional functions required for matrix
+class Matrix
 {
     vector<unordered_set<int>> distinctValuesInColumns;
 
 public:
     string sourceFileName = "";
-    string tableName = "";
+    string matrixName = "";
     vector<string> columns;
     vector<uint> distinctValuesPerColumnCount;
     uint columnCount = 0;
@@ -32,14 +37,13 @@ public:
     vector<uint> rowsPerBlockCount;
     bool indexed = false;
     string indexedColumn = "";
-    IndexingStrategy indexingStrategy = NOTHING;
 
     bool extractColumnNames(string firstLine);
     bool blockify();
     void updateStatistics(vector<int> row);
-    Table();
-    Table(string tableName);
-    Table(string tableName, vector<string> columns);
+    Matrix();
+    Matrix(string matrixName);
+    Matrix(string matrixName, vector<string> columns);
     bool load();
     bool isColumn(string columnName);
     void renameColumn(string fromColumnName, string toColumnName);
@@ -58,10 +62,12 @@ public:
  * @tparam T current usaages include int and string
  * @param row 
  */
+    // [debug] : change below for matrix printing/other op.
+
     template <typename T>
     void writeRow(vector<T> row, ostream &fout)
     {
-        logger.log("Table::printRow");
+        logger.log("Matrix::printRow");
         for (int columnCounter = 0; columnCounter < row.size(); columnCounter++)
         {
             if (columnCounter != 0)
@@ -72,16 +78,16 @@ public:
     }
 
     /**
- * @brief Static function that takes a vector of valued and prints them out in a
- * comma seperated format.
- *
- * @tparam T current usaages include int and string
- * @param row 
- */
+     * @brief Static function that takes a vector of valued and prints them out in a
+     * comma seperated format.
+     *
+     * @tparam T current usaages include int and string
+     * @param row
+     */
     template <typename T>
     void writeRow(vector<T> row)
     {
-        logger.log("Table::printRow");
+        logger.log("Matrix::printRow");
         ofstream fout(this->sourceFileName, ios::app);
         this->writeRow(row, fout);
         fout.close();

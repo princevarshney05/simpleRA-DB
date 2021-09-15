@@ -18,14 +18,24 @@ bool syntacticParse()
     else if (possibleQueryType == "LIST")
         return syntacticParseLIST();
     else if (possibleQueryType == "LOAD")
-        return syntacticParseLOAD();
+    {
+        if (tokenizedQuery[1] == "MATRIX") // check for LOAD MATRIX <matrix_name> COMMAND
+            return syntacticParseLOAD_MATRIX();
+        else
+            return syntacticParseLOAD();
+    }
     else if (possibleQueryType == "PRINT")
-        return syntacticParsePRINT();
+    {
+        if (tokenizedQuery[1] == "MATRIX") // check for PRINT MATRIX <matrix_name> COMMAND
+            return syntacticParsePRINT_MATRIX();
+        else
+            return syntacticParsePRINT();
+    }
     else if (possibleQueryType == "RENAME")
         return syntacticParseRENAME();
-    else if(possibleQueryType == "EXPORT")
+    else if (possibleQueryType == "EXPORT")
         return syntacticParseEXPORT();
-    else if(possibleQueryType == "SOURCE")
+    else if (possibleQueryType == "SOURCE")
         return syntacticParseSOURCE();
     else
     {
@@ -89,6 +99,7 @@ void ParsedQuery::clear()
     this->joinSecondColumnName = "";
 
     this->loadRelationName = "";
+    this->loadMatrixName = "";
 
     this->printRelationName = "";
 
@@ -139,7 +150,8 @@ bool isFileExists(string tableName)
  * @return true 
  * @return false 
  */
-bool isQueryFile(string fileName){
+bool isQueryFile(string fileName)
+{
     fileName = "../data/" + fileName + ".ra";
     struct stat buffer;
     return (stat(fileName.c_str(), &buffer) == 0);

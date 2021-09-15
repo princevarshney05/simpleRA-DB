@@ -1,7 +1,7 @@
 #include "global.h"
 /**
  * @brief 
- * SYNTAX: LOAD relation_name
+ * SYNTAX: LOAD MATRIX relation_name
  */
 bool syntacticParseLOAD_MATRIX()
 {
@@ -42,7 +42,7 @@ void executeLOAD_MATRIX()
     if (matrix->load())
     {
         matrixCatalogue.insertMatrix(matrix);
-        cout << "Loaded Table. Column Count: " << matrix->columnCount << " Row Count: " << matrix->rowCount << endl;
+        cout << "Loaded MATRIX. Column Count: " << matrix->columnCount << " Row Count: " << matrix->rowCount << endl;
     }
     return;
 }

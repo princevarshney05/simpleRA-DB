@@ -15,6 +15,7 @@ enum QueryType
     LOAD,
     LOAD_MATRIX,
     PRINT,
+    PRINT_MATRIX,
     PROJECTION,
     RENAME,
     SELECTION,
@@ -80,6 +81,7 @@ public:
     string loadMatrixName = "";
 
     string printRelationName = "";
+    string printMatrixName = "";
 
     string projectionResultRelationName = "";
     vector<string> projectionColumnList;
@@ -119,6 +121,7 @@ bool syntacticParseLIST();
 bool syntacticParseLOAD();
 bool syntacticParseLOAD_MATRIX();
 bool syntacticParsePRINT();
+bool syntacticParsePRINT_MATRIX();
 bool syntacticParsePROJECTION();
 bool syntacticParseRENAME();
 bool syntacticParseSELECTION();

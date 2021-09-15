@@ -25,7 +25,12 @@ bool syntacticParse()
             return syntacticParseLOAD();
     }
     else if (possibleQueryType == "PRINT")
-        return syntacticParsePRINT();
+    {
+        if (tokenizedQuery[1] == "MATRIX") // check for PRINT MATRIX <matrix_name> COMMAND
+            return syntacticParsePRINT_MATRIX();
+        else
+            return syntacticParsePRINT();
+    }
     else if (possibleQueryType == "RENAME")
         return syntacticParseRENAME();
     else if (possibleQueryType == "EXPORT")

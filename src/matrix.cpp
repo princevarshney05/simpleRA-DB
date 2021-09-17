@@ -59,7 +59,7 @@ bool Matrix::load()
     if (getline(fin, line))
     {
         fin.close();
-        if (this->extractColumnNames(line))
+        if (countColumns(line))
             if (this->blockify())
                 return true;
     }
@@ -67,30 +67,18 @@ bool Matrix::load()
     return false;
 }
 
-/**
- * @brief Function extracts column names from the header line of the .csv data
- * file. 
- *
- * @param line 
- * @return true if column names successfully extracted (i.e. no column name
- * repeats)
- * @return false otherwise
- */
-bool Matrix::extractColumnNames(string firstLine)
+bool Matrix::countColumns(string firstLine)
 {
-    logger.log("Matrix::extractColumnNames");
-    unordered_set<string> columnNames;
+    logger.log("Matrix:countColumns");
     string word;
     stringstream s(firstLine);
+    int count = 0;
     while (getline(s, word, ','))
     {
-        word.erase(std::remove_if(word.begin(), word.end(), ::isspace), word.end());
-        if (columnNames.count(word))
-            return false;
-        columnNames.insert(word);
-        this->columns.emplace_back(word);
+        count++;
     }
-    this->columnCount = this->columns.size();
+    cout << "There are" << count << " columns in the matrix" << endl;
+    this->columnCount = count;
     this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * this->columnCount));
     return true;
 }
@@ -114,7 +102,7 @@ bool Matrix::blockify()
     dummy.clear();
     this->distinctValuesInColumns.assign(this->columnCount, dummy);
     this->distinctValuesPerColumnCount.assign(this->columnCount, 0);
-    getline(fin, line);
+    // getline(fin, line);
     while (getline(fin, line))
     {
         stringstream s(line);

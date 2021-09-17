@@ -70,7 +70,7 @@ vector<int> Page::getRow(int rowIndex)
 Page::Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCount)
 {
     logger.log("Page::Page");
-    cout << tableName << pageIndex << rowCount;
+    // cout << tableName << pageIndex << rowCount;
     this->tableName = tableName;
     this->pageIndex = pageIndex;
     this->rows = rows;

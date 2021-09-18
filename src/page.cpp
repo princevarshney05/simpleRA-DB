@@ -31,14 +31,25 @@ Page::Page(string tableName, int pageIndex)
     this->tableName = tableName;
     this->pageIndex = pageIndex;
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
-    Table table = *tableCatalogue.getTable(tableName);
-    this->columnCount = table.columnCount;
-    uint maxRowCount = table.maxRowsPerBlock;
+    uint maxRowCount = 0;
+    if (parsedQuery.queryType == PRINT_MATRIX)
+    {
+        Matrix table = *matrixCatalogue.getMatrix(tableName);
+        this->columnCount = table.columnCount;
+        maxRowCount = table.maxRowsPerBlock;
+        this->rowCount = table.rowsPerBlockCount[pageIndex];
+    }
+    else
+    {
+        Table table = *tableCatalogue.getTable(tableName);
+        this->columnCount = table.columnCount;
+        maxRowCount = table.maxRowsPerBlock;
+        this->rowCount = table.rowsPerBlockCount[pageIndex];
+    }
     vector<int> row(columnCount, 0);
     this->rows.assign(maxRowCount, row);
 
     ifstream fin(pageName, ios::in);
-    this->rowCount = table.rowsPerBlockCount[pageIndex];
     int number;
     for (uint rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {

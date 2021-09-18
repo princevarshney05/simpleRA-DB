@@ -77,7 +77,7 @@ bool Matrix::countColumns(string firstLine)
     {
         count++;
     }
-    cout << "There are" << count << " columns in the matrix" << endl;
+    // cout << "There are" << count << " columns in the matrix" << endl;
     this->columnCount = count;
     this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * this->columnCount));
     return true;
@@ -109,7 +109,11 @@ bool Matrix::blockify()
         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
         {
             if (!getline(s, word, ','))
+            {
+                // cout << word << " -- false hogya matrix" << endl;
                 return false;
+            }
+            // cout << word << endl;
             row[columnCounter] = stoi(word);
             rowsInPage[pageCounter][columnCounter] = row[columnCounter];
         }
@@ -123,6 +127,7 @@ bool Matrix::blockify()
             pageCounter = 0;
         }
     }
+    cout << this->maxRowsPerBlock << endl;
     if (pageCounter)
     {
         bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
@@ -159,48 +164,6 @@ void Matrix::updateStatistics(vector<int> row)
 }
 
 /**
- * @brief Checks if the given column is present in this matrix.
- *
- * @param columnName 
- * @return true 
- * @return false 
- */
-bool Matrix::isColumn(string columnName)
-{
-    logger.log("Matrix::isColumn");
-    for (auto col : this->columns)
-    {
-        if (col == columnName)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
- * @brief Renames the column indicated by fromColumnName to toColumnName. It is
- * assumed that checks such as the existence of fromColumnName and the non prior
- * existence of toColumnName are done.
- *
- * @param fromColumnName 
- * @param toColumnName 
- */
-void Matrix::renameColumn(string fromColumnName, string toColumnName)
-{
-    logger.log("Matrix::renameColumn");
-    for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
-    {
-        if (columns[columnCounter] == fromColumnName)
-        {
-            columns[columnCounter] = toColumnName;
-            break;
-        }
-    }
-    return;
-}
-
-/**
  * @brief Function prints the first few rows of the matrix. If the matrix contains
  * more rows than PRINT_COUNT, exactly PRINT_COUNT rows are printed, else all
  * the rows are printed.
@@ -211,10 +174,10 @@ void Matrix::print()
     logger.log("Matrix::print");
     uint count = min((long long)PRINT_COUNT, this->rowCount);
 
-    //print headings
-    this->writeRow(this->columns, cout);
+    //print headings(not required for matrix)
+    // this->writeRow(this->columns, cout);
 
-    Cursor cursor(this->matrixName, 0);
+    Cursor cursor(this->matrixName, 0, 1);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < count; rowCounter++)
     {
@@ -257,7 +220,7 @@ void Matrix::makePermanent()
     //print headings
     this->writeRow(this->columns, fout);
 
-    Cursor cursor(this->matrixName, 0);
+    Cursor cursor(this->matrixName, 0, 1);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
@@ -303,7 +266,7 @@ void Matrix::unload()
 Cursor Matrix::getCursor()
 {
     logger.log("Matrix::getCursor");
-    Cursor cursor(this->matrixName, 0);
+    Cursor cursor(this->matrixName, 0, 1);
     return cursor;
 }
 /**

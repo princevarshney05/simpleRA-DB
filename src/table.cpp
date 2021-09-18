@@ -134,6 +134,7 @@ bool Table::blockify()
             pageCounter = 0;
         }
     }
+    cout << this->maxRowsPerBlock << endl;
     if (pageCounter)
     {
         bufferManager.writePage(this->tableName, this->blockCount, rowsInPage, pageCounter);
@@ -225,7 +226,7 @@ void Table::print()
     //print headings
     this->writeRow(this->columns, cout);
 
-    Cursor cursor(this->tableName, 0);
+    Cursor cursor(this->tableName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < count; rowCounter++)
     {
@@ -268,7 +269,7 @@ void Table::makePermanent()
     //print headings
     this->writeRow(this->columns, fout);
 
-    Cursor cursor(this->tableName, 0);
+    Cursor cursor(this->tableName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
@@ -314,7 +315,7 @@ void Table::unload()
 Cursor Table::getCursor()
 {
     logger.log("Table::getCursor");
-    Cursor cursor(this->tableName, 0);
+    Cursor cursor(this->tableName, 0, 0);
     return cursor;
 }
 /**

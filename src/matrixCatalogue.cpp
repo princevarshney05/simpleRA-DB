@@ -27,17 +27,17 @@ bool MatrixCatalogue::isMatrix(string matrixName)
     return false;
 }
 
-bool MatrixCatalogue::isColumnFromMatrix(string columnName, string matrixName)
-{
-    logger.log("MatrixCatalogue::isColumnFromMatrix");
-    if (this->isMatrix(matrixName))
-    {
-        Matrix *matrix = this->getMatrix(matrixName);
-        if (matrix->isColumn(columnName))
-            return true;
-    }
-    return false;
-}
+// bool MatrixCatalogue::isColumnFromMatrix(string columnName, string matrixName)
+// {
+//     logger.log("MatrixCatalogue::isColumnFromMatrix");
+//     if (this->isMatrix(matrixName))
+//     {
+//         Matrix *matrix = this->getMatrix(matrixName);
+//         if (matrix->isColumn(columnName))
+//             return true;
+//     }
+//     return false;
+// }
 
 void MatrixCatalogue::print()
 {

@@ -37,8 +37,9 @@ public:
     vector<uint> rowsPerBlockCount;
     bool indexed = false;
     string indexedColumn = "";
+    bool sparse = false; //true , if matrix is sparse(more than 60% elements are 0)
 
-    bool extractColumnNames(string firstLine);
+    bool countColumns(string firstLine);
     bool blockify();
     void updateStatistics(vector<int> row);
     Matrix();
@@ -54,6 +55,7 @@ public:
     Cursor getCursor();
     int getColumnIndex(string columnName);
     void unload();
+    void isSparse(); //checks whether matrix is sparse
 
     /**
  * @brief Static function that takes a vector of valued and prints them out in a

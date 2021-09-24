@@ -80,6 +80,7 @@ bool Matrix::countColumns(string firstLine)
     // cout << "There are" << count << " columns in the matrix" << endl;
     this->columnCount = count;
     this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * this->columnCount));
+    this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
     return true;
 }
 
@@ -90,57 +91,103 @@ bool Matrix::countColumns(string firstLine)
  * @return true if successfully blockified
  * @return false otherwise
  */
+
 bool Matrix::blockify()
 {
+    
     logger.log("Matrix::blockify");
     ifstream fin(this->sourceFileName, ios::in);
     string line, word;
-    vector<int> row(this->columnCount, 0);
-    vector<vector<int>> rowsInPage(this->maxRowsPerBlock, row);
+    vector<int> elementsInBlock(this->maxElementsPerBlock, 0);
     int pageCounter = 0;
-    unordered_set<int> dummy;
-    dummy.clear();
-    this->distinctValuesInColumns.assign(this->columnCount, dummy);
-    this->distinctValuesPerColumnCount.assign(this->columnCount, 0);
-    // getline(fin, line);
-    while (getline(fin, line))
-    {
+    int elementsInBlockCounter = 0;
+
+    while (getline(fin, line)){
         stringstream s(line);
-        for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
-        {
+        for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
+            if(elementsInBlockCounter == this->maxElementsPerBlock){
+                bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
+                this->blockCount++;
+                this->rowsPerBlockCount.emplace_back(pageCounter);
+                pageCounter = 0;
+                elementsInBlockCounter = 0;
+            }
             if (!getline(s, word, ','))
             {
-                // cout << word << " -- false hogya matrix" << endl;
+                
                 return false;
             }
-            // cout << word << endl;
-            row[columnCounter] = stoi(word);
-            rowsInPage[pageCounter][columnCounter] = row[columnCounter];
+            elementsInBlock[elementsInBlockCounter++] = stoi(word);
+
         }
         pageCounter++;
-        this->updateStatistics(row);
-        if (pageCounter == this->maxRowsPerBlock)
-        {
-            bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
-            this->blockCount++;
-            this->rowsPerBlockCount.emplace_back(pageCounter);
-            pageCounter = 0;
-        }
+        this->rowCount++;
     }
-    cout << this->maxRowsPerBlock << endl;
-    if (pageCounter)
-    {
-        bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
+    if(pageCounter != 0){
+        bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
         this->blockCount++;
         this->rowsPerBlockCount.emplace_back(pageCounter);
         pageCounter = 0;
+        elementsInBlockCounter = 0;
     }
-
     if (this->rowCount == 0)
         return false;
-    this->distinctValuesInColumns.clear();
+    
     return true;
+
+
 }
+// bool Matrix::blockify()
+// {
+//     logger.log("Matrix::blockify");
+//     ifstream fin(this->sourceFileName, ios::in);
+//     string line, word;
+//     vector<int> row(this->columnCount, 0);
+//     vector<vector<int>> rowsInPage(this->maxRowsPerBlock, row);
+//     int pageCounter = 0;
+//     unordered_set<int> dummy;
+//     dummy.clear();
+//     this->distinctValuesInColumns.assign(this->columnCount, dummy);
+//     this->distinctValuesPerColumnCount.assign(this->columnCount, 0);
+//     // getline(fin, line);
+//     while (getline(fin, line))
+//     {
+//         stringstream s(line);
+//         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
+//         {
+//             if (!getline(s, word, ','))
+//             {
+//                 // cout << word << " -- false hogya matrix" << endl;
+//                 return false;
+//             }
+//             // cout << word << endl;
+//             row[columnCounter] = stoi(word);
+//             rowsInPage[pageCounter][columnCounter] = row[columnCounter];
+//         }
+//         pageCounter++;
+//         this->updateStatistics(row);
+//         if (pageCounter == this->maxRowsPerBlock)
+//         {
+//             bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
+//             this->blockCount++;
+//             this->rowsPerBlockCount.emplace_back(pageCounter);
+//             pageCounter = 0;
+//         }
+//     }
+//     cout << this->maxRowsPerBlock << endl;
+//     if (pageCounter)
+//     {
+//         bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
+//         this->blockCount++;
+//         this->rowsPerBlockCount.emplace_back(pageCounter);
+//         pageCounter = 0;
+//     }
+
+//     if (this->rowCount == 0)
+//         return false;
+//     this->distinctValuesInColumns.clear();
+//     return true;
+// }
 
 /**
  * @brief Given a row of values, this function will update the statistics it

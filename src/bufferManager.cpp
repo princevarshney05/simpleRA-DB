@@ -92,6 +92,12 @@ void BufferManager::writePage(string tableName, int pageIndex, vector<vector<int
     page.writePage();
 }
 
+void BufferManager::writeMatrixPage(string tableName, int pageIndex, vector<int> elementsInBlock, int rowCount,int elementsInBlockCounter){
+    logger.log("BufferManager::writePage");
+    Page page(tableName, pageIndex, elementsInBlock, rowCount, elementsInBlockCounter);
+    page.writeMatrixPage();
+}
+
 /**
  * @brief Deletes file names fileName
  *

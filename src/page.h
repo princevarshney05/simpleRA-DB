@@ -16,7 +16,11 @@ class Page{
     string pageIndex;
     int columnCount;
     int rowCount;
+    int elementsInBlockCounter;
     vector<vector<int>> rows;
+
+    vector<int> elementsInBlock;
+    
 
     public:
 
@@ -24,6 +28,8 @@ class Page{
     Page();
     Page(string tableName, int pageIndex);
     Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCount);
+    Page(string tableName, int pageIndex, vector<int> elementsInBlock, int rowCount,int elementsInBlockCounter);
     vector<int> getRow(int rowIndex);
     void writePage();
+    void writeMatrixPage();
 };

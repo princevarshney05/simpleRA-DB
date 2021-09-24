@@ -90,6 +90,18 @@ Page::Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCou
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
 }
 
+Page::Page(string tableName, int pageIndex, vector<int> elementsInBlock, int rowCount,int elementsInBlockCounter)
+{
+    logger.log("Page::Page");
+    // cout << tableName << pageIndex << rowCount;
+    this->tableName = tableName;
+    this->pageIndex = pageIndex;
+    this->elementsInBlock = elementsInBlock;
+    this->rowCount = rowCount;
+    this->elementsInBlockCounter = elementsInBlockCounter;
+    this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
+}
+
 /**
  * @brief writes current page contents to file.
  * 
@@ -109,4 +121,19 @@ void Page::writePage()
         fout << endl;
     }
     fout.close();
+}
+
+void Page::writeMatrixPage()
+{
+    logger.log("Page::writePage");
+    ofstream fout(this->pageName, ios::trunc);
+    for(int i=0;i<this->elementsInBlockCounter;i++){
+        if(i != 0){
+            fout << " ";
+        }
+        fout << this->elementsInBlock[i];
+    }
+    fout.close();
+    
+    
 }

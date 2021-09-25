@@ -81,6 +81,7 @@ bool Matrix::countColumns(string firstLine)
     this->columnCount = count;
     this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * this->columnCount));
     this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
+    this->maxDimension=(uint)sqrt(this->maxElementsPerBlock);
     return true;
 }
 
@@ -94,49 +95,92 @@ bool Matrix::countColumns(string firstLine)
 
 bool Matrix::blockify()
 {
-    
     logger.log("Matrix::blockify");
     ifstream fin(this->sourceFileName, ios::in);
     string line, word;
-    vector<int> elementsInBlock(this->maxElementsPerBlock, 0);
-    int pageCounter = 0;
-    int elementsInBlockCounter = 0;
-
+    vector<int> rowOfSubmatrix(this->maxDimension);
+    int submatrixCounter = 0;
+    int rowPageIndex = 0;
+    int columnPageIndex = 0;
+    
     while (getline(fin, line)){
         stringstream s(line);
+        columnPageIndex = 0;
+        if((this->rowCount % this->maxDimension == 0) and (this->rowCount != 0)){
+            rowPageIndex += 1;
+        }
         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
-            if(elementsInBlockCounter == this->maxElementsPerBlock){
-                bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
-                this->blockCount++;
-                this->rowsPerBlockCount.emplace_back(pageCounter);
-                pageCounter = 0;
-                elementsInBlockCounter = 0;
+            if(submatrixCounter == this->maxDimension){
+                bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
+                columnPageIndex++;
+                submatrixCounter = 0;
             }
             if (!getline(s, word, ','))
             {
-                
                 return false;
             }
-            elementsInBlock[elementsInBlockCounter++] = stoi(word);
-
+            rowOfSubmatrix[submatrixCounter++] = stoi(word);
         }
-        pageCounter++;
+        if(submatrixCounter){
+            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
+            columnPageIndex++;
+            submatrixCounter = 0;
+        }
         this->rowCount++;
-    }
-    if(pageCounter != 0){
-        bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
-        this->blockCount++;
-        this->rowsPerBlockCount.emplace_back(pageCounter);
-        pageCounter = 0;
-        elementsInBlockCounter = 0;
+        
     }
     if (this->rowCount == 0)
         return false;
     
     return true;
 
-
 }
+
+// bool Matrix::blockify()
+// {
+    
+//     logger.log("Matrix::blockify");
+//     ifstream fin(this->sourceFileName, ios::in);
+//     string line, word;
+//     vector<int> elementsInBlock(this->maxElementsPerBlock, 0);
+//     int pageCounter = 0;
+//     int elementsInBlockCounter = 0;
+
+//     while (getline(fin, line)){
+//         stringstream s(line);
+//         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
+//             if(elementsInBlockCounter == this->maxElementsPerBlock){
+//                 bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
+//                 this->blockCount++;
+//                 this->rowsPerBlockCount.emplace_back(pageCounter);
+//                 pageCounter = 0;
+//                 elementsInBlockCounter = 0;
+//             }
+//             if (!getline(s, word, ','))
+//             {
+                
+//                 return false;
+//             }
+//             elementsInBlock[elementsInBlockCounter++] = stoi(word);
+
+//         }
+//         pageCounter++;
+//         this->rowCount++;
+//     }
+//     if(pageCounter != 0){
+//         bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
+//         this->blockCount++;
+//         this->rowsPerBlockCount.emplace_back(pageCounter);
+//         pageCounter = 0;
+//         elementsInBlockCounter = 0;
+//     }
+//     if (this->rowCount == 0)
+//         return false;
+    
+//     return true;
+
+
+// }
 // bool Matrix::blockify()
 // {
 //     logger.log("Matrix::blockify");

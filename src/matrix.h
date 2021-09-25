@@ -35,6 +35,7 @@ public:
     uint blockCount = 0;
     uint maxRowsPerBlock = 0;
     uint maxElementsPerBlock=0;
+    uint maxDimension=0;
     vector<uint> rowsPerBlockCount;
     bool indexed = false;
     string indexedColumn = "";

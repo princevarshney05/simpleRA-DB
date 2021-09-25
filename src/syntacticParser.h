@@ -13,6 +13,7 @@ enum QueryType
     INDEX,
     JOIN,
     LIST,
+    TRANSPOSE,
     LOAD,
     LOAD_MATRIX,
     PRINT,
@@ -132,6 +133,7 @@ bool syntacticParseRENAME();
 bool syntacticParseSELECTION();
 bool syntacticParseSORT();
 bool syntacticParseSOURCE();
+bool syntacticParseTRANSPOSE();
 
 bool isFileExists(string tableName);
 bool isQueryFile(string fileName);

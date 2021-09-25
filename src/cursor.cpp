@@ -63,6 +63,14 @@ vector<int> Cursor::getNextExport()
     }
     return result;
 }
+vector<int> Cursor::getNextTranspose()
+{
+    logger.log("Cursor::getNext");
+    vector<int> result = this->page.getRow(this->pagePointer);
+    this->pagePointer++;
+    return result;
+}
+
 /**
  * @brief Function that loads Page indicated by pageIndex. Now the cursor starts
  * reading from the new page.

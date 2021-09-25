@@ -54,6 +54,7 @@ public:
     bool isColumn(string columnName);
     void renameColumn(string fromColumnName, string toColumnName);
     void print();
+    void transpose();
     void makePermanent();
     bool isPermanent();
     void getNextPage(Cursor *cursor);

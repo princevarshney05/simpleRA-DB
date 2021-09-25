@@ -21,6 +21,8 @@ public:
     Cursor(string Name, int rowPageIndex, int columnPageIndex);
     vector<int> getNext();
     vector<int> getNextExport();
+    vector<int> getNextTranspose();
     void nextPage(int pageIndex);
     void nextPage(int rowPageIndex,int columnPageIndex);
+    
 };

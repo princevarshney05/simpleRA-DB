@@ -17,6 +17,8 @@ bool syntacticParse()
         return syntacticParseINDEX();
     else if (possibleQueryType == "LIST")
         return syntacticParseLIST();
+    else if (possibleQueryType == "TRANSPOSE")
+        return syntacticParseTRANSPOSE();
     else if (possibleQueryType == "LOAD")
     {
         if (tokenizedQuery[1] == "MATRIX") // check for LOAD MATRIX <matrix_name> COMMAND

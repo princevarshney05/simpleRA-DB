@@ -57,6 +57,7 @@ public:
     void makePermanent();
     bool isPermanent();
     void getNextPage(Cursor *cursor);
+    void getNextPageExport(Cursor *cursor);
     Cursor getCursor();
     int getColumnIndex(string columnName);
     void unload();
@@ -77,6 +78,20 @@ public:
         logger.log("Matrix::printRow");
         int count = min((int)row.size(),20);
         for (int columnCounter = 0; columnCounter < count; columnCounter++)
+        {
+            if (columnCounter != 0)
+                fout << ", ";
+            fout << row[columnCounter];
+        }
+        fout << endl;
+    }
+
+    template <typename T>
+    void writeRowExport(vector<T> row, ostream &fout)
+    {
+        logger.log("Matrix::printRow");
+        
+        for (int columnCounter = 0; columnCounter < row.size(); columnCounter++)
         {
             if (columnCounter != 0)
                 fout << ", ";

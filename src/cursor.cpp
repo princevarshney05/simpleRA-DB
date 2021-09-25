@@ -47,6 +47,22 @@ vector<int> Cursor::getNext()
     }
     return result;
 }
+vector<int> Cursor::getNextExport()
+{
+    logger.log("Cursor::getNext");
+    vector<int> result = this->page.getRow(this->pagePointer);
+    this->pagePointer++;
+    if (result.empty())
+    {
+        matrixCatalogue.getMatrix(this->Name)->getNextPageExport(this);
+        if (!this->pagePointer)
+        {
+            result = this->page.getRow(this->pagePointer);
+            this->pagePointer++;
+        }
+    }
+    return result;
+}
 /**
  * @brief Function that loads Page indicated by pageIndex. Now the cursor starts
  * reading from the new page.

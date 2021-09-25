@@ -36,7 +36,13 @@ bool syntacticParse()
     else if (possibleQueryType == "RENAME")
         return syntacticParseRENAME();
     else if (possibleQueryType == "EXPORT")
-        return syntacticParseEXPORT();
+    {
+        if (tokenizedQuery[1] == "MATRIX") // check for LOAD MATRIX <matrix_name> COMMAND
+            return syntacticParseEXPORT_MATRIX();
+        else
+            return syntacticParseEXPORT();;
+    }
+        
     else if (possibleQueryType == "SOURCE")
         return syntacticParseSOURCE();
     else

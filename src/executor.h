@@ -6,6 +6,7 @@ void executeCLEAR();
 void executeCROSS();
 void executeDISTINCT();
 void executeEXPORT();
+void executeEXPORT_MATRIX();
 void executeINDEX();
 void executeJOIN();
 void executeLIST();

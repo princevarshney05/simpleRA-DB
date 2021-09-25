@@ -19,7 +19,7 @@ bool syntacticParseLOAD_MATRIX()
 // [debug] : edit below
 bool semanticParseLOAD_MATRIX()
 {
-    logger.log("semanticParseLOAD_MATIX");
+    logger.log("semanticParseLOAD_MATRIX");
     if (matrixCatalogue.isMatrix(parsedQuery.loadMatrixName))
     {
         cout << "SEMANTIC ERROR: Relation already exists" << endl;

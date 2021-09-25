@@ -12,10 +12,14 @@ public:
     int pageIndex;
     string Name;
     int pagePointer;
-    int TorM; // 0 for table , 1 for matrix
+    int rowPageIndex;
+    int columnPageIndex;
+    
 
 public:
-    Cursor(string Name, int pageIndex, int TorM);
+    Cursor(string Name, int pageIndex);
+    Cursor(string Name, int rowPageIndex, int columnPageIndex);
     vector<int> getNext();
     void nextPage(int pageIndex);
+    void nextPage(int rowPageIndex,int columnPageIndex);
 };

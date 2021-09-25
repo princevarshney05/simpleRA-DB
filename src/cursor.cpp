@@ -1,14 +1,28 @@
 #include "global.h"
 
-Cursor::Cursor(string Name, int pageIndex, int type)
+Cursor::Cursor(string Name, int pageIndex)
 {
     logger.log("Cursor::Cursor");
     this->page = bufferManager.getPage(Name, pageIndex);
     this->pagePointer = 0;
     this->Name = Name;
     this->pageIndex = pageIndex;
-    this->TorM = type; // table or matrix
+    
 }
+
+Cursor::Cursor(string Name, int rowPageIndex, int columnPageIndex)
+{
+    logger.log("Cursor::Cursor");
+    this->page = bufferManager.getPage(Name, rowPageIndex,columnPageIndex);
+    this->pagePointer = 0;
+    this->Name = Name;
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
+}
+
+
+
+
 
 /**
  * @brief This function reads the next row from the page. The index of the
@@ -44,5 +58,14 @@ void Cursor::nextPage(int pageIndex)
     logger.log("Cursor::nextPage");
     this->page = bufferManager.getPage(this->Name, pageIndex);
     this->pageIndex = pageIndex;
+    this->pagePointer = 0;
+}
+
+void Cursor::nextPage(int rowPageIndex,int columnPageIndex)
+{
+    logger.log("Cursor::nextPage");
+    this->page = bufferManager.getPage(this->Name, rowPageIndex,columnPageIndex);
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
     this->pagePointer = 0;
 }

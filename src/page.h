@@ -31,6 +31,7 @@ class Page{
     string pageName = "";
     Page();
     Page(string tableName, int pageIndex);
+    Page(string tableName, int rowPageIndex, int columnPageIndex);
     Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCount);
     Page(string tableName, int pageIndex, vector<int> elementsInBlock, int rowCount,int elementsInBlockCounter);
     Page(string tableName, int rowPageIndex, int columnPageIndex,vector<int> rowOfSubmatrix, int submatrixCounter);

@@ -32,20 +32,43 @@ Page::Page(string tableName, int pageIndex)
     this->pageIndex = pageIndex;
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
     uint maxRowCount = 0;
-    if (parsedQuery.queryType == PRINT_MATRIX)
+    
+    Table table = *tableCatalogue.getTable(tableName);
+    this->columnCount = table.columnCount;
+    maxRowCount = table.maxRowsPerBlock;
+    this->rowCount = table.rowsPerBlockCount[pageIndex];
+    
+    vector<int> row(columnCount, 0);
+    this->rows.assign(maxRowCount, row);
+
+    ifstream fin(pageName, ios::in);
+    int number;
+    for (uint rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
-        Matrix table = *matrixCatalogue.getMatrix(tableName);
-        this->columnCount = table.columnCount;
-        maxRowCount = table.maxRowsPerBlock;
-        this->rowCount = table.rowsPerBlockCount[pageIndex];
+        for (int columnCounter = 0; columnCounter < columnCount; columnCounter++)
+        {
+            fin >> number;
+            this->rows[rowCounter][columnCounter] = number;
+        }
     }
-    else
-    {
-        Table table = *tableCatalogue.getTable(tableName);
-        this->columnCount = table.columnCount;
-        maxRowCount = table.maxRowsPerBlock;
-        this->rowCount = table.rowsPerBlockCount[pageIndex];
-    }
+    fin.close();
+}
+
+Page::Page(string tableName, int rowPageIndex, int columnPageIndex)
+{
+    logger.log("Page::Page");
+    this->tableName = tableName;
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
+    this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(rowPageIndex) +"_"+to_string(columnPageIndex);
+    uint maxRowCount = 0;
+   
+    Matrix table = *matrixCatalogue.getMatrix(tableName);
+    this->columnCount = table.columnsPerBlockCount[{rowPageIndex,columnPageIndex}];
+    maxRowCount = table.maxRowsPerBlock;
+    this->rowCount = table.rowsPerBlockCount[{rowPageIndex,columnPageIndex}];
+    
+    
     vector<int> row(columnCount, 0);
     this->rows.assign(maxRowCount, row);
 

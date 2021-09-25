@@ -79,9 +79,10 @@ bool Matrix::countColumns(string firstLine)
     }
     // cout << "There are" << count << " columns in the matrix" << endl;
     this->columnCount = count;
-    this->maxRowsPerBlock = (uint)((BLOCK_SIZE * 1000) / (sizeof(int) * this->columnCount));
+    
     this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
     this->maxDimension=(uint)sqrt(this->maxElementsPerBlock);
+    this->maxRowsPerBlock = this->maxDimension;
     return true;
 }
 
@@ -112,6 +113,8 @@ bool Matrix::blockify()
         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
             if(submatrixCounter == this->maxDimension){
                 bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
+                this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = submatrixCounter;
+                this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}] += 1;
                 columnPageIndex++;
                 submatrixCounter = 0;
             }
@@ -123,16 +126,23 @@ bool Matrix::blockify()
         }
         if(submatrixCounter){
             bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
+            this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = submatrixCounter;
+            this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}] += 1;
             columnPageIndex++;
             submatrixCounter = 0;
+            
         }
         this->rowCount++;
         
     }
+    this->blockCount = this->rowsPerBlockCount.size();
+    this->rowBlockCount = ceil(this->rowCount / this->maxDimension);
+    this->columnBlockCount = rowBlockCount;
     if (this->rowCount == 0)
         return false;
     
     return true;
+    
 
 }
 
@@ -268,7 +278,7 @@ void Matrix::print()
     //print headings(not required for matrix)
     // this->writeRow(this->columns, cout);
 
-    Cursor cursor(this->matrixName, 0, 1);
+    Cursor cursor(this->matrixName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < count; rowCounter++)
     {
@@ -289,9 +299,9 @@ void Matrix::getNextPage(Cursor *cursor)
 {
     logger.log("Matrix::getNext");
 
-    if (cursor->pageIndex < this->blockCount - 1)
+    if (cursor->rowPageIndex < this->rowBlockCount - 1)
     {
-        cursor->nextPage(cursor->pageIndex + 1);
+        cursor->nextPage(cursor->rowPageIndex + 1,0);
     }
 }
 

@@ -16,6 +16,8 @@ void executeCommand()
         break;
     case EXPORT:
         executeEXPORT();
+    case EXPORT_MATRIX:
+        executeEXPORT_MATRIX();
         break;
     case INDEX:
         executeINDEX();

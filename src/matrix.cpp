@@ -305,6 +305,19 @@ void Matrix::getNextPage(Cursor *cursor)
     }
 }
 
+void Matrix::getNextPageExport(Cursor *cursor)
+{
+    logger.log("Matrix::getNext");
+
+    if(cursor->columnPageIndex < this->columnBlockCount -1){
+        cursor->nextPage(cursor->rowPageIndex,cursor->columnPageIndex+1);
+    }
+    else if (cursor->rowPageIndex < this->rowBlockCount - 1)
+    {
+        cursor->nextPage(cursor->rowPageIndex + 1,0);
+    }
+}
+
 /**
  * @brief called when EXPORT command is invoked to move source file to "data"
  * folder.
@@ -321,12 +334,12 @@ void Matrix::makePermanent()
     //print headings
     this->writeRow(this->columns, fout);
 
-    Cursor cursor(this->matrixName, 0, 1);
+    Cursor cursor(this->matrixName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
         row = cursor.getNext();
-        this->writeRow(row, fout);
+        this->writeRowExport(row, fout);
     }
     fout.close();
 }

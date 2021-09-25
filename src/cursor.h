@@ -20,6 +20,7 @@ public:
     Cursor(string Name, int pageIndex);
     Cursor(string Name, int rowPageIndex, int columnPageIndex);
     vector<int> getNext();
+    vector<int> getNextExport();
     void nextPage(int pageIndex);
     void nextPage(int rowPageIndex,int columnPageIndex);
 };

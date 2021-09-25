@@ -27,6 +27,8 @@ bool semanticParse()
         return semanticParseLOAD_MATRIX();
     case PRINT:
         return semanticParsePRINT();
+    case TRANSPOSE:
+        return semanticParseTRANSPOSE();
     case PRINT_MATRIX:
         return semanticParsePRINT_MATRIX();
     case PROJECTION:

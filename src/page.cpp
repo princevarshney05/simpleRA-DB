@@ -138,6 +138,17 @@ Page::Page(string tableName, int rowPageIndex, int columnPageIndex,vector<int> r
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(rowPageIndex) + "_"+to_string(columnPageIndex);
 }
 
+Page::Page(string tableName, int rowPageIndex, int columnPageIndex,vector<vector<int>> &rows){
+    logger.log("Page::Page");
+    // cout << tableName << pageIndex << rowCount;
+    this->tableName = tableName;
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
+    this->rows=rows;
+    
+    this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(rowPageIndex) + "_"+to_string(columnPageIndex);
+}
+
 /**
  * @brief writes current page contents to file.
  * 
@@ -170,6 +181,23 @@ void Page::writeMatrixPage()
         fout << this->rowOfSubmatrix[i];
     }
     fout << "\n";
+    fout.close();
+    
+    
+}
+
+void Page::writeMatrixPageTranspose()
+{
+    logger.log("Page::writeMatrixPage");
+    ofstream fout(this->pageName, ios::trunc);
+    for(auto &row:this->rows){
+        for(auto &v:row){
+            fout << v << " ";
+        }
+        fout << "\n";
+    }
+   
+    
     fout.close();
     
     

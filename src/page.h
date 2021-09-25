@@ -35,8 +35,10 @@ class Page{
     Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCount);
     Page(string tableName, int pageIndex, vector<int> elementsInBlock, int rowCount,int elementsInBlockCounter);
     Page(string tableName, int rowPageIndex, int columnPageIndex,vector<int> rowOfSubmatrix, int submatrixCounter);
+    Page(string tableName, int rowPageIndex, int columnPageIndex,vector<vector<int>> &rows);
 
     vector<int> getRow(int rowIndex);
     void writePage();
     void writeMatrixPage();
+    void writeMatrixPageTranspose();
 };

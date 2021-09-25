@@ -136,7 +136,7 @@ bool Matrix::blockify()
         
     }
     this->blockCount = this->rowsPerBlockCount.size();
-    this->rowBlockCount = ceil(this->rowCount / this->maxDimension);
+    this->rowBlockCount = ceil(this->rowCount / (double)this->maxDimension);
     this->columnBlockCount = rowBlockCount;
     if (this->rowCount == 0)
         return false;
@@ -398,3 +398,43 @@ int Matrix::getColumnIndex(string columnName)
             return columnCounter;
     }
 }
+
+void Matrix::transpose(){
+    int rowPageIndex ;
+    int columnPageIndex ;
+    for(rowPageIndex =0;rowPageIndex<this->rowBlockCount;rowPageIndex++){
+        for(columnPageIndex = 0;columnPageIndex<=rowPageIndex;columnPageIndex++){
+            Cursor cursor1(this->matrixName,rowPageIndex,columnPageIndex);
+            Cursor cursor2(this->matrixName, columnPageIndex,rowPageIndex);
+            
+            int p1_col = this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}];
+            int p1_row = this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}];
+            int p2_col = this->columnsPerBlockCount[{columnPageIndex,rowPageIndex}];
+            int p2_row = this->rowsPerBlockCount[{columnPageIndex,rowPageIndex}];
+            vector<vector<int>> p1_t (p1_col,vector<int>(p1_row));
+            vector<vector<int>> p2_t (p2_col,vector<int>(p2_row));
+
+            vector<int> result;
+            int j;
+            for(int i=0;i<p1_row;i++){
+                j = 0;
+                result = cursor1.getNextTranspose();
+                for(auto &r:result){
+                    p1_t[j++][i] = r;
+                }
+            }
+            for(int i=0;i<p2_row;i++){
+                j = 0;
+                result = cursor2.getNextTranspose();
+                for(auto &r:result){
+                    p2_t[j++][i] = r;
+                }
+            }
+            bufferManager.writeMatrixPage(this->matrixName,rowPageIndex,columnPageIndex,p2_t);
+            bufferManager.writeMatrixPage(this->matrixName,columnPageIndex,rowPageIndex,p1_t);
+            
+
+        }
+    }
+}
+

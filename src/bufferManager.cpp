@@ -116,6 +116,13 @@ void BufferManager::writeMatrixPage(string tableName, int rowPageIndex, int colu
     page.writeMatrixPage();
 }
 
+void BufferManager::writeMatrixPage(string tableName, int rowPageIndex, int columnPageIndex,vector<vector<int>> &rows){
+    logger.log("BufferManager::writeMatrixPage");
+    Page page(tableName, rowPageIndex, columnPageIndex, rows);
+    page.writeMatrixPageTranspose();
+}
+
+
 /**
  * @brief Deletes file names fileName
  *

@@ -49,6 +49,8 @@ void executeCommand()
     case SELECTION:
         executeSELECTION();
         break;
+    case TRANSPOSE:
+        executeTRANSPOSE();
     case SORT:
         executeSORT();
         break;

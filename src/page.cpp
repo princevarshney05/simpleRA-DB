@@ -102,6 +102,19 @@ Page::Page(string tableName, int pageIndex, vector<int> elementsInBlock, int row
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
 }
 
+Page::Page(string tableName, int rowPageIndex, int columnPageIndex,vector<int> rowOfSubmatrix, int submatrixCounter)
+{
+    logger.log("Page::Page");
+    // cout << tableName << pageIndex << rowCount;
+    this->tableName = tableName;
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
+    this->rowOfSubmatrix = rowOfSubmatrix;
+    this-> submatrixCounter =  submatrixCounter;
+    
+    this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(rowPageIndex) + "_"+to_string(columnPageIndex);
+}
+
 /**
  * @brief writes current page contents to file.
  * 
@@ -125,14 +138,15 @@ void Page::writePage()
 
 void Page::writeMatrixPage()
 {
-    logger.log("Page::writePage");
-    ofstream fout(this->pageName, ios::trunc);
-    for(int i=0;i<this->elementsInBlockCounter;i++){
+    logger.log("Page::writeMatrixPage");
+    ofstream fout(this->pageName, ios::app);
+    for(int i=0;i<this->submatrixCounter;i++){
         if(i != 0){
             fout << " ";
         }
-        fout << this->elementsInBlock[i];
+        fout << this->rowOfSubmatrix[i];
     }
+    fout << "\n";
     fout.close();
     
     

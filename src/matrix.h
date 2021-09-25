@@ -33,10 +33,13 @@ public:
     uint columnCount = 0;
     long long int rowCount = 0;
     uint blockCount = 0;
+    uint rowBlockCount = 0;
+    uint columnBlockCount = 0;
     uint maxRowsPerBlock = 0;
     uint maxElementsPerBlock=0;
     uint maxDimension=0;
-    vector<uint> rowsPerBlockCount;
+    map<pair<uint,uint>,uint> rowsPerBlockCount;
+    map<pair<uint,uint>,uint> columnsPerBlockCount;
     bool indexed = false;
     string indexedColumn = "";
     bool sparse = false; //true , if matrix is sparse(more than 60% elements are 0)
@@ -72,7 +75,8 @@ public:
     void writeRow(vector<T> row, ostream &fout)
     {
         logger.log("Matrix::printRow");
-        for (int columnCounter = 0; columnCounter < row.size(); columnCounter++)
+        int count = min((int)row.size(),20);
+        for (int columnCounter = 0; columnCounter < count; columnCounter++)
         {
             if (columnCounter != 0)
                 fout << ", ";

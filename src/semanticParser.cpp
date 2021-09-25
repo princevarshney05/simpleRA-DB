@@ -31,8 +31,7 @@ bool semanticParse()
         return semanticParseTRANSPOSE();
     case PRINT_MATRIX:
         return semanticParsePRINT_MATRIX();
-    case TRANSPOSE:
-        return semanticParsePRINT_MATRIX();
+    
     case PROJECTION:
         return semanticParsePROJECTION();
     case RENAME:

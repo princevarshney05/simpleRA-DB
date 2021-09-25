@@ -432,7 +432,7 @@ void Matrix::transpose(){
             }
             bufferManager.writeMatrixPage(this->matrixName,rowPageIndex,columnPageIndex,p2_t);
             bufferManager.writeMatrixPage(this->matrixName,columnPageIndex,rowPageIndex,p1_t);
-            
+            bufferManager.emptyPages();
 
         }
     }

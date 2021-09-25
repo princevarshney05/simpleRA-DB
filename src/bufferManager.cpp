@@ -66,6 +66,13 @@ Page BufferManager::getFromPool(string pageName)
             return page;
 }
 
+void BufferManager::emptyPages()
+{
+    while(!this->pages.empty()){
+        this->pages.pop_front();
+    }
+}
+
 /**
  * @brief Inserts page indicated by tableName and pageIndex into pool. If the
  * pool is full, the pool ejects the oldest inserted page from the pool and adds

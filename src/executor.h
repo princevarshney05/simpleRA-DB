@@ -13,6 +13,7 @@ void executeLOAD();
 void executeLOAD_MATRIX();
 void executePRINT();
 void executePRINT_MATRIX();
+void executeTRANSPOSE();
 void executePROJECTION();
 void executeRENAME();
 void executeSELECTION();

@@ -31,6 +31,8 @@ bool syntacticParse()
         else
             return syntacticParsePRINT();
     }
+    else if (possibleQueryType == "TRANSPOSE")
+        return syntacticParseTRANSPOSE();
     else if (possibleQueryType == "RENAME")
         return syntacticParseRENAME();
     else if (possibleQueryType == "EXPORT")

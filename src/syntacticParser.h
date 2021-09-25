@@ -16,6 +16,7 @@ enum QueryType
     LOAD_MATRIX,
     PRINT,
     PRINT_MATRIX,
+    TRANSPOSE,
     PROJECTION,
     RENAME,
     SELECTION,
@@ -123,6 +124,7 @@ bool syntacticParseLOAD_MATRIX();
 bool syntacticParsePRINT();
 bool syntacticParsePRINT_MATRIX();
 bool syntacticParsePROJECTION();
+bool syntacticParseTRANSPOSE();
 bool syntacticParseRENAME();
 bool syntacticParseSELECTION();
 bool syntacticParseSORT();

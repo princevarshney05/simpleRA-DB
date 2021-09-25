@@ -38,6 +38,9 @@ void executeCommand()
     case PRINT_MATRIX:
         executePRINT_MATRIX();
         break;
+    case TRANSPOSE:
+        executeTRANSPOSE();
+        break;
     case PROJECTION:
         executePROJECTION();
         break;

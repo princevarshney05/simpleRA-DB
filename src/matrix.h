@@ -85,7 +85,7 @@ public:
         for (int columnCounter = 0; columnCounter < count; columnCounter++)
         {
             if (columnCounter != 0)
-                fout << ", ";
+                fout << " ";
             fout << row[columnCounter];
         }
         fout << endl;

@@ -53,18 +53,95 @@ Matrix::Matrix(string matrixName, vector<string> columns)
  */
 bool Matrix::load()
 {
-    logger.log("Matrix::load");
-    fstream fin(this->sourceFileName, ios::in);
-    string line;
-    if (getline(fin, line))
+    isSparse();
+    if (this->sparse)
     {
+        //load operation for sparse matrix
+        return true;
+    }
+    else
+    {
+        //load operation for non sparse matrix
+        logger.log("Matrix::load");
+        fstream fin(this->sourceFileName, ios::in);
+        string line;
+        if (getline(fin, line))
+        {
+            fin.close();
+            if (countColumns(line))
+                if (this->blockify())
+                    return true;
+        }
         fin.close();
-        if (countColumns(line))
-            if (this->blockify())
-                return true;
+        return false;
+    }
+}
+
+void Matrix::isSparse()
+{
+    logger.log("Matrix:isSparse");
+
+    //get row count
+    fstream fin(this->sourceFileName, ios::in);
+    string line, word;
+    int total_rows = 0;
+    int total_cols = 0;
+
+    while (getline(fin, line))
+    {
+        total_rows++;
     }
     fin.close();
-    return false;
+
+    //get column count
+    fstream fin1(this->sourceFileName, ios::in);
+    if (getline(fin1, line))
+    {
+        stringstream s(line);
+        while (getline(s, word, ','))
+        {
+            total_cols++;
+        }
+    }
+    fin1.close();
+
+    //check sparse
+    int non_zero_elements = 0;
+    fstream fin2(this->sourceFileName, ios::in);
+    while (getline(fin2, line))
+    {
+        stringstream s(line);
+        while (getline(s, word, ','))
+        {
+            if ((stoi(word)) == 0)
+            {
+                non_zero_elements++;
+            }
+        }
+    }
+    fin2.close();
+
+    //calculate sparse %
+    double sparse_percentage = (double)non_zero_elements / (double)(total_cols * total_rows);
+    if (sparse_percentage * 100 >= 60)
+    {
+        cout << "Sparse matrix : ";
+        cout << "Sparce percentage : " << sparse_percentage * 100 << " %" << endl;
+        this->total_non_zero_elements = non_zero_elements;
+        this->rowCount = total_rows;
+        this->columnCount = total_cols;
+        this->sparse = true;
+    }
+    else
+    {
+        cout << "NOT Sparse matrix" << endl;
+        this->sparse = false;
+    }
+
+    // cout << "Non zero elements : " << non_zero_elements << endl;
+    // cout << "percentage : " << sparse_percentage << endl;
+    // cout << total_rows << endl;
+    // cout << total_cols << endl;
 }
 
 bool Matrix::countColumns(string firstLine)
@@ -79,9 +156,9 @@ bool Matrix::countColumns(string firstLine)
     }
     // cout << "There are" << count << " columns in the matrix" << endl;
     this->columnCount = count;
-    
+
     this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
-    this->maxDimension=(uint)sqrt(this->maxElementsPerBlock);
+    this->maxDimension = (uint)sqrt(this->maxElementsPerBlock);
     this->maxRowsPerBlock = this->maxDimension;
     return true;
 }
@@ -103,18 +180,22 @@ bool Matrix::blockify()
     int submatrixCounter = 0;
     int rowPageIndex = 0;
     int columnPageIndex = 0;
-    
-    while (getline(fin, line)){
+
+    while (getline(fin, line))
+    {
         stringstream s(line);
         columnPageIndex = 0;
-        if((this->rowCount % this->maxDimension == 0) and (this->rowCount != 0)){
+        if ((this->rowCount % this->maxDimension == 0) and (this->rowCount != 0))
+        {
             rowPageIndex += 1;
         }
-        for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
-            if(submatrixCounter == this->maxDimension){
-                bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
-                this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = submatrixCounter;
-                this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}] += 1;
+        for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
+        {
+            if (submatrixCounter == this->maxDimension)
+            {
+                bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfSubmatrix, submatrixCounter);
+                this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}] = submatrixCounter;
+                this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] += 1;
                 columnPageIndex++;
                 submatrixCounter = 0;
             }
@@ -124,31 +205,28 @@ bool Matrix::blockify()
             }
             rowOfSubmatrix[submatrixCounter++] = stoi(word);
         }
-        if(submatrixCounter){
-            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex,columnPageIndex,rowOfSubmatrix, submatrixCounter);
-            this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = submatrixCounter;
-            this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}] += 1;
+        if (submatrixCounter)
+        {
+            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfSubmatrix, submatrixCounter);
+            this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}] = submatrixCounter;
+            this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] += 1;
             columnPageIndex++;
             submatrixCounter = 0;
-            
         }
         this->rowCount++;
-        
     }
     this->blockCount = this->rowsPerBlockCount.size();
     this->rowBlockCount = ceil(this->rowCount / (double)this->maxDimension);
     this->columnBlockCount = rowBlockCount;
     if (this->rowCount == 0)
         return false;
-    
-    return true;
-    
 
+    return true;
 }
 
 // bool Matrix::blockify()
 // {
-    
+
 //     logger.log("Matrix::blockify");
 //     ifstream fin(this->sourceFileName, ios::in);
 //     string line, word;
@@ -168,7 +246,7 @@ bool Matrix::blockify()
 //             }
 //             if (!getline(s, word, ','))
 //             {
-                
+
 //                 return false;
 //             }
 //             elementsInBlock[elementsInBlockCounter++] = stoi(word);
@@ -186,9 +264,8 @@ bool Matrix::blockify()
 //     }
 //     if (this->rowCount == 0)
 //         return false;
-    
-//     return true;
 
+//     return true;
 
 // }
 // bool Matrix::blockify()
@@ -301,31 +378,34 @@ void Matrix::getNextPage(Cursor *cursor)
 
     if (cursor->rowPageIndex < this->rowBlockCount - 1)
     {
-        cursor->nextPage(cursor->rowPageIndex + 1,0);
+        cursor->nextPage(cursor->rowPageIndex + 1, 0);
     }
 }
 
-void Matrix::getNextPageExport1(Cursor *cursor,int pagePointer)
+void Matrix::getNextPageExport1(Cursor *cursor, int pagePointer)
 {
     logger.log("Matrix::getNext");
 
-    if(cursor->columnPageIndex < this->columnBlockCount -1){
-        cursor->nextPage(cursor->rowPageIndex,cursor->columnPageIndex+1,pagePointer);
-    }
-    else if(pagePointer < this->maxDimension - 1)
+    if (cursor->columnPageIndex < this->columnBlockCount - 1)
     {
-        cursor->nextPage(cursor->rowPageIndex,0,pagePointer+1);
+        cursor->nextPage(cursor->rowPageIndex, cursor->columnPageIndex + 1, pagePointer);
     }
-    else if(cursor->rowPageIndex < this->rowBlockCount -1){
-        cursor->nextPage(cursor->rowPageIndex+1,0,0);
+    else if (pagePointer < this->maxDimension - 1)
+    {
+        cursor->nextPage(cursor->rowPageIndex, 0, pagePointer + 1);
+    }
+    else if (cursor->rowPageIndex < this->rowBlockCount - 1)
+    {
+        cursor->nextPage(cursor->rowPageIndex + 1, 0, 0);
     }
 }
-void Matrix::getNextPageExport2(Cursor *cursor,int pagePointer)
+void Matrix::getNextPageExport2(Cursor *cursor, int pagePointer)
 {
     logger.log("Matrix::getNext");
 
-    if(cursor->rowPageIndex < this->rowBlockCount -1){
-        cursor->nextPage(cursor->rowPageIndex+1,0,0);
+    if (cursor->rowPageIndex < this->rowBlockCount - 1)
+    {
+        cursor->nextPage(cursor->rowPageIndex + 1, 0, 0);
     }
 }
 
@@ -342,20 +422,18 @@ void Matrix::makePermanent()
     string newSourceFile = "../data/" + this->matrixName + ".csv";
     ofstream fout(newSourceFile, ios::out);
 
-    
-
     Cursor cursor(this->matrixName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
-        for(int colCounter=0;colCounter<this->columnBlockCount;colCounter++){
-            row = cursor.getNextExport(rowCounter%this->maxDimension);
+        for (int colCounter = 0; colCounter < this->columnBlockCount; colCounter++)
+        {
+            row = cursor.getNextExport(rowCounter % this->maxDimension);
             this->writeRowExport(row, fout);
-            if(colCounter != this->columnBlockCount - 1) fout << ",";
+            if (colCounter != this->columnBlockCount - 1)
+                fout << ",";
         }
         fout << endl;
-        
-        
     }
     fout.close();
 }
@@ -415,42 +493,47 @@ int Matrix::getColumnIndex(string columnName)
     }
 }
 
-void Matrix::transpose(){
-    int rowPageIndex ;
-    int columnPageIndex ;
-    for(rowPageIndex =0;rowPageIndex<this->rowBlockCount;rowPageIndex++){
-        for(columnPageIndex = 0;columnPageIndex<=rowPageIndex;columnPageIndex++){
-            Cursor cursor1(this->matrixName,rowPageIndex,columnPageIndex);
-            Cursor cursor2(this->matrixName, columnPageIndex,rowPageIndex);
-            
-            int p1_col = this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}];
-            int p1_row = this->rowsPerBlockCount[{rowPageIndex,columnPageIndex}];
-            int p2_col = this->columnsPerBlockCount[{columnPageIndex,rowPageIndex}];
-            int p2_row = this->rowsPerBlockCount[{columnPageIndex,rowPageIndex}];
-            vector<vector<int>> p1_t (p1_col,vector<int>(p1_row));
-            vector<vector<int>> p2_t (p2_col,vector<int>(p2_row));
+void Matrix::transpose()
+{
+    int rowPageIndex;
+    int columnPageIndex;
+    for (rowPageIndex = 0; rowPageIndex < this->rowBlockCount; rowPageIndex++)
+    {
+        for (columnPageIndex = 0; columnPageIndex <= rowPageIndex; columnPageIndex++)
+        {
+            Cursor cursor1(this->matrixName, rowPageIndex, columnPageIndex);
+            Cursor cursor2(this->matrixName, columnPageIndex, rowPageIndex);
+
+            int p1_col = this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}];
+            int p1_row = this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}];
+            int p2_col = this->columnsPerBlockCount[{columnPageIndex, rowPageIndex}];
+            int p2_row = this->rowsPerBlockCount[{columnPageIndex, rowPageIndex}];
+            vector<vector<int>> p1_t(p1_col, vector<int>(p1_row));
+            vector<vector<int>> p2_t(p2_col, vector<int>(p2_row));
 
             vector<int> result;
             int j;
-            for(int i=0;i<p1_row;i++){
+            for (int i = 0; i < p1_row; i++)
+            {
                 j = 0;
                 result = cursor1.getNextTranspose();
-                for(auto &r:result){
+                for (auto &r : result)
+                {
                     p1_t[j++][i] = r;
                 }
             }
-            for(int i=0;i<p2_row;i++){
+            for (int i = 0; i < p2_row; i++)
+            {
                 j = 0;
                 result = cursor2.getNextTranspose();
-                for(auto &r:result){
+                for (auto &r : result)
+                {
                     p2_t[j++][i] = r;
                 }
             }
-            bufferManager.writeMatrixPage(this->matrixName,rowPageIndex,columnPageIndex,p2_t);
-            bufferManager.writeMatrixPage(this->matrixName,columnPageIndex,rowPageIndex,p1_t);
+            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, p2_t);
+            bufferManager.writeMatrixPage(this->matrixName, columnPageIndex, rowPageIndex, p1_t);
             bufferManager.emptyPages();
-
         }
     }
 }
-

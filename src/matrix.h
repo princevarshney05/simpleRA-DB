@@ -36,13 +36,14 @@ public:
     uint rowBlockCount = 0;
     uint columnBlockCount = 0;
     uint maxRowsPerBlock = 0;
-    uint maxElementsPerBlock=0;
-    uint maxDimension=0;
-    map<pair<uint,uint>,uint> rowsPerBlockCount;
-    map<pair<uint,uint>,uint> columnsPerBlockCount;
+    uint maxElementsPerBlock = 0;
+    uint maxDimension = 0;
+    map<pair<uint, uint>, uint> rowsPerBlockCount;
+    map<pair<uint, uint>, uint> columnsPerBlockCount;
     bool indexed = false;
     string indexedColumn = "";
     bool sparse = false; //true , if matrix is sparse(more than 60% elements are 0)
+    long long int total_non_zero_elements = 0;
 
     bool countColumns(string firstLine);
     bool blockify();
@@ -58,8 +59,8 @@ public:
     void makePermanent();
     bool isPermanent();
     void getNextPage(Cursor *cursor);
-    void getNextPageExport1(Cursor *cursor,int pagePointer);
-    void getNextPageExport2(Cursor *cursor,int pagePointer);
+    void getNextPageExport1(Cursor *cursor, int pagePointer);
+    void getNextPageExport2(Cursor *cursor, int pagePointer);
     Cursor getCursor();
     int getColumnIndex(string columnName);
     void unload();
@@ -78,7 +79,7 @@ public:
     void writeRow(vector<T> row, ostream &fout)
     {
         logger.log("Matrix::printRow");
-        int count = min((int)row.size(),20);
+        int count = min((int)row.size(), 20);
         for (int columnCounter = 0; columnCounter < count; columnCounter++)
         {
             if (columnCounter != 0)
@@ -92,14 +93,13 @@ public:
     void writeRowExport(vector<T> row, ostream &fout)
     {
         logger.log("Matrix::printRow");
-        
+
         for (int columnCounter = 0; columnCounter < row.size(); columnCounter++)
         {
             if (columnCounter != 0)
                 fout << ",";
             fout << row[columnCounter];
         }
-        
     }
 
     /**

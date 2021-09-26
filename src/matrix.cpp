@@ -255,6 +255,7 @@ bool Matrix::blockifySparse()
                 rowOfPage[2] = stoi(word);
                 bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfPage, 3);
                 this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] += 1;
+                this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = 3;
                 non_zero_elements++;
             }
         }
@@ -262,6 +263,7 @@ bool Matrix::blockifySparse()
         row_number++;
     }
     this->rowBlockCount = rowPageIndex;
+    this->columnBlockCount = 1;
 
     return true;
 }

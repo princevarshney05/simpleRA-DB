@@ -58,7 +58,8 @@ public:
     void makePermanent();
     bool isPermanent();
     void getNextPage(Cursor *cursor);
-    void getNextPageExport(Cursor *cursor);
+    void getNextPageExport1(Cursor *cursor,int pagePointer);
+    void getNextPageExport2(Cursor *cursor,int pagePointer);
     Cursor getCursor();
     int getColumnIndex(string columnName);
     void unload();
@@ -95,10 +96,10 @@ public:
         for (int columnCounter = 0; columnCounter < row.size(); columnCounter++)
         {
             if (columnCounter != 0)
-                fout << ", ";
+                fout << ",";
             fout << row[columnCounter];
         }
-        fout << endl;
+        
     }
 
     /**

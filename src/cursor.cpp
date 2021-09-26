@@ -47,19 +47,15 @@ vector<int> Cursor::getNext()
     }
     return result;
 }
-vector<int> Cursor::getNextExport()
+vector<int> Cursor::getNextExport(int pagePointer)
 {
     logger.log("Cursor::getNext");
     vector<int> result = this->page.getRow(this->pagePointer);
-    this->pagePointer++;
+    cout << this->rowPageIndex << " " << this->columnPageIndex << " " << this->pagePointer << endl;
+    matrixCatalogue.getMatrix(this->Name)->getNextPageExport1(this,pagePointer);
     if (result.empty())
     {
-        matrixCatalogue.getMatrix(this->Name)->getNextPageExport(this);
-        if (!this->pagePointer)
-        {
-            result = this->page.getRow(this->pagePointer);
-            this->pagePointer++;
-        }
+        result = this->page.getRow(this->pagePointer);
     }
     return result;
 }
@@ -92,4 +88,13 @@ void Cursor::nextPage(int rowPageIndex,int columnPageIndex)
     this->rowPageIndex = rowPageIndex;
     this->columnPageIndex = columnPageIndex;
     this->pagePointer = 0;
+}
+
+void Cursor::nextPage(int rowPageIndex,int columnPageIndex,int pagePointer)
+{
+    logger.log("Cursor::nextPage");
+    this->page = bufferManager.getPage(this->Name, rowPageIndex,columnPageIndex);
+    this->rowPageIndex = rowPageIndex;
+    this->columnPageIndex = columnPageIndex;
+    this->pagePointer = pagePointer;
 }

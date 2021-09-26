@@ -305,16 +305,27 @@ void Matrix::getNextPage(Cursor *cursor)
     }
 }
 
-void Matrix::getNextPageExport(Cursor *cursor)
+void Matrix::getNextPageExport1(Cursor *cursor,int pagePointer)
 {
     logger.log("Matrix::getNext");
 
     if(cursor->columnPageIndex < this->columnBlockCount -1){
-        cursor->nextPage(cursor->rowPageIndex,cursor->columnPageIndex+1);
+        cursor->nextPage(cursor->rowPageIndex,cursor->columnPageIndex+1,pagePointer);
     }
-    else if (cursor->rowPageIndex < this->rowBlockCount - 1)
+    else if(pagePointer < this->maxDimension - 1)
     {
-        cursor->nextPage(cursor->rowPageIndex + 1,0);
+        cursor->nextPage(cursor->rowPageIndex,0,pagePointer+1);
+    }
+    else if(cursor->rowPageIndex < this->rowBlockCount -1){
+        cursor->nextPage(cursor->rowPageIndex+1,0,0);
+    }
+}
+void Matrix::getNextPageExport2(Cursor *cursor,int pagePointer)
+{
+    logger.log("Matrix::getNext");
+
+    if(cursor->rowPageIndex < this->rowBlockCount -1){
+        cursor->nextPage(cursor->rowPageIndex+1,0,0);
     }
 }
 
@@ -331,15 +342,20 @@ void Matrix::makePermanent()
     string newSourceFile = "../data/" + this->matrixName + ".csv";
     ofstream fout(newSourceFile, ios::out);
 
-    //print headings
-    this->writeRow(this->columns, fout);
+    
 
     Cursor cursor(this->matrixName, 0, 0);
     vector<int> row;
     for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
-        row = cursor.getNext();
-        this->writeRowExport(row, fout);
+        for(int colCounter=0;colCounter<this->columnBlockCount;colCounter++){
+            row = cursor.getNextExport(rowCounter%this->maxDimension);
+            this->writeRowExport(row, fout);
+            if(colCounter != this->columnBlockCount - 1) fout << ",";
+        }
+        fout << endl;
+        
+        
     }
     fout.close();
 }
@@ -384,7 +400,7 @@ Cursor Matrix::getCursor()
     return cursor;
 }
 /**
- * @brief Function that returns the index of column indicated by columnName
+ * @brief Function that returns the index of columnm indicated by columnName
  * 
  * @param columnName 
  * @return int 

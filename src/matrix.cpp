@@ -57,7 +57,10 @@ bool Matrix::load()
     if (this->sparse)
     {
         //load operation for sparse matrix
-        return true;
+        logger.log("Matrix::load");
+        if (this->blockifySparse())
+            return true;
+        return false;
     }
     else
     {
@@ -137,11 +140,6 @@ void Matrix::isSparse()
         cout << "NOT Sparse matrix" << endl;
         this->sparse = false;
     }
-
-    // cout << "Non zero elements : " << non_zero_elements << endl;
-    // cout << "percentage : " << sparse_percentage << endl;
-    // cout << total_rows << endl;
-    // cout << total_cols << endl;
 }
 
 bool Matrix::countColumns(string firstLine)
@@ -220,6 +218,48 @@ bool Matrix::blockify()
     this->columnBlockCount = rowBlockCount;
     if (this->rowCount == 0)
         return false;
+
+    return true;
+}
+
+bool Matrix::blockifySparse()
+{
+    logger.log("Matrix::blockifySparse");
+    this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
+    this->maxRowsPerBlock = this->maxElementsPerBlock / 3; // 3 elements in each row: row_num, col_num, value
+
+    ifstream fin(this->sourceFileName, ios::in);
+    string line, word;
+    int rowPageIndex = 0;
+    int columnPageIndex = 0;
+    vector<int> rowOfPage(3); // each row of Page has 3 columns
+    int row_number = 0;       //this->rowcount is previously calculated for sparse matrix in isSparse(), so taking another variable
+    while (getline(fin, line))
+    {
+        stringstream s(line);
+        columnPageIndex = 0;
+        if ((row_number % this->maxRowsPerBlock == 0) and (row_number != 0))
+        {
+            rowPageIndex += 1;
+        }
+
+        for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
+        {
+            if (!getline(s, word, ','))
+            {
+                return false;
+            }
+            if (!stoi(word) == 0)
+            {
+                rowOfPage[0] = row_number;
+                rowOfPage[1] = columnCounter;
+                rowOfPage[2] = stoi(word);
+                bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfPage, 3);
+            }
+        }
+
+        row_number++;
+    }
 
     return true;
 }

@@ -403,26 +403,75 @@ void Matrix::getNextPageExport2(Cursor *cursor, int pagePointer)
  */
 void Matrix::makePermanent()
 {
-    logger.log("Matrix::makePermanent");
-    if (!this->isPermanent())
-        bufferManager.deleteFile(this->sourceFileName);
-    string newSourceFile = "../data/" + this->matrixName + ".csv";
-    ofstream fout(newSourceFile, ios::out);
-
-    Cursor cursor(this->matrixName, 0, 0);
-    vector<int> row;
-    for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
+    if (this->sparse)
     {
-        for (int colCounter = 0; colCounter < this->columnBlockCount; colCounter++)
+        logger.log("Matrix::makePermanentSparse");
+        if (!this->isPermanent())
+            bufferManager.deleteFile(this->sourceFileName);
+        string newSourceFile = "../data/" + this->matrixName + ".csv";
+        ofstream fout(newSourceFile, ios::out);
+
+        uint count = this->rowCount;
+        Cursor cursor(this->matrixName, 0, 0);
+        vector<int> row;
+        int found = 0;
+        int row_index = 0, column_index = 1;
+
+        for (int rowCounter = 0; rowCounter < count; rowCounter++)
         {
-            row = cursor.getNextExport(rowCounter % this->maxDimension);
-            this->writeRowExport(row, fout);
-            if (colCounter != this->columnBlockCount - 1)
-                fout << ",";
+            for (int column_counter = 0; column_counter < count; column_counter++)
+            {
+                Cursor cursor(this->matrixName, 0, 0);
+                while (true)
+                {
+                    row = cursor.getNext();
+                    if (row.size() == 0)
+                    {
+                        found = 0;
+                        break;
+                    }
+                    if (row[row_index] == rowCounter && row[column_index] == column_counter)
+                    {
+                        fout << row[2]; //index of value in row is 2
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found == 0)
+                {
+                    fout << "0";
+                }
+                if (!(column_counter + 1 == count))
+                    fout << ",";
+            }
+            if (!(rowCounter + 1 == count))
+                fout << endl;
         }
-        fout << endl;
+        fout.close();
     }
-    fout.close();
+    else
+    {
+        logger.log("Matrix::makePermanent");
+        if (!this->isPermanent())
+            bufferManager.deleteFile(this->sourceFileName);
+        string newSourceFile = "../data/" + this->matrixName + ".csv";
+        ofstream fout(newSourceFile, ios::out);
+
+        Cursor cursor(this->matrixName, 0, 0);
+        vector<int> row;
+        for (int rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
+        {
+            for (int colCounter = 0; colCounter < this->columnBlockCount; colCounter++)
+            {
+                row = cursor.getNextExport(rowCounter % this->maxDimension);
+                this->writeRowExport(row, fout);
+                if (colCounter != this->columnBlockCount - 1)
+                    fout << ",";
+            }
+            fout << endl;
+        }
+        fout.close();
+    }
 }
 
 /**

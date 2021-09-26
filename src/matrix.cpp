@@ -216,6 +216,10 @@ bool Matrix::blockify()
     this->blockCount = this->rowsPerBlockCount.size();
     this->rowBlockCount = ceil(this->rowCount / (double)this->maxDimension);
     this->columnBlockCount = rowBlockCount;
+    //DEBUG
+    // cout << this->blockCount << endl;
+    // cout << this->rowBlockCount << endl;
+    // cout << this->columnBlockCount << endl;
     if (this->rowCount == 0)
         return false;
 
@@ -226,25 +230,25 @@ bool Matrix::blockifySparse()
 {
     logger.log("Matrix::blockifySparse");
     this->maxElementsPerBlock = (uint)((BLOCK_SIZE * 1000) / sizeof(int));
-    this->maxRowsPerBlock = this->maxElementsPerBlock / 3; // 3 elements in each row: row_num, col_num, value
-
+    this->maxRowsPerBlock = (uint)this->maxElementsPerBlock / 3; // 3 elements in each row: row_num, col_num, value
     ifstream fin(this->sourceFileName, ios::in);
     string line, word;
     int rowPageIndex = 0;
     int columnPageIndex = 0;
+    int non_zero_elements = 0;
     vector<int> rowOfPage(3); // each row of Page has 3 columns
     int row_number = 0;       //this->rowcount is previously calculated for sparse matrix in isSparse(), so taking another variable
     while (getline(fin, line))
     {
         stringstream s(line);
         columnPageIndex = 0;
-        if ((row_number % this->maxRowsPerBlock == 0) and (row_number != 0))
-        {
-            rowPageIndex += 1;
-        }
-
         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
         {
+            if (non_zero_elements == this->maxRowsPerBlock)
+            {
+                rowPageIndex += 1;
+                non_zero_elements = 0;
+            }
             if (!getline(s, word, ','))
             {
                 return false;
@@ -255,110 +259,18 @@ bool Matrix::blockifySparse()
                 rowOfPage[1] = columnCounter;
                 rowOfPage[2] = stoi(word);
                 bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfPage, 3);
+                non_zero_elements++;
             }
         }
 
         row_number++;
     }
 
+    cout << rowPageIndex << endl;
+    cout << columnPageIndex << endl;
+
     return true;
 }
-
-// bool Matrix::blockify()
-// {
-
-//     logger.log("Matrix::blockify");
-//     ifstream fin(this->sourceFileName, ios::in);
-//     string line, word;
-//     vector<int> elementsInBlock(this->maxElementsPerBlock, 0);
-//     int pageCounter = 0;
-//     int elementsInBlockCounter = 0;
-
-//     while (getline(fin, line)){
-//         stringstream s(line);
-//         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++){
-//             if(elementsInBlockCounter == this->maxElementsPerBlock){
-//                 bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
-//                 this->blockCount++;
-//                 this->rowsPerBlockCount.emplace_back(pageCounter);
-//                 pageCounter = 0;
-//                 elementsInBlockCounter = 0;
-//             }
-//             if (!getline(s, word, ','))
-//             {
-
-//                 return false;
-//             }
-//             elementsInBlock[elementsInBlockCounter++] = stoi(word);
-
-//         }
-//         pageCounter++;
-//         this->rowCount++;
-//     }
-//     if(pageCounter != 0){
-//         bufferManager.writeMatrixPage(this->matrixName, this->blockCount, elementsInBlock, pageCounter,elementsInBlockCounter);
-//         this->blockCount++;
-//         this->rowsPerBlockCount.emplace_back(pageCounter);
-//         pageCounter = 0;
-//         elementsInBlockCounter = 0;
-//     }
-//     if (this->rowCount == 0)
-//         return false;
-
-//     return true;
-
-// }
-// bool Matrix::blockify()
-// {
-//     logger.log("Matrix::blockify");
-//     ifstream fin(this->sourceFileName, ios::in);
-//     string line, word;
-//     vector<int> row(this->columnCount, 0);
-//     vector<vector<int>> rowsInPage(this->maxRowsPerBlock, row);
-//     int pageCounter = 0;
-//     unordered_set<int> dummy;
-//     dummy.clear();
-//     this->distinctValuesInColumns.assign(this->columnCount, dummy);
-//     this->distinctValuesPerColumnCount.assign(this->columnCount, 0);
-//     // getline(fin, line);
-//     while (getline(fin, line))
-//     {
-//         stringstream s(line);
-//         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
-//         {
-//             if (!getline(s, word, ','))
-//             {
-//                 // cout << word << " -- false hogya matrix" << endl;
-//                 return false;
-//             }
-//             // cout << word << endl;
-//             row[columnCounter] = stoi(word);
-//             rowsInPage[pageCounter][columnCounter] = row[columnCounter];
-//         }
-//         pageCounter++;
-//         this->updateStatistics(row);
-//         if (pageCounter == this->maxRowsPerBlock)
-//         {
-//             bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
-//             this->blockCount++;
-//             this->rowsPerBlockCount.emplace_back(pageCounter);
-//             pageCounter = 0;
-//         }
-//     }
-//     cout << this->maxRowsPerBlock << endl;
-//     if (pageCounter)
-//     {
-//         bufferManager.writePage(this->matrixName, this->blockCount, rowsInPage, pageCounter);
-//         this->blockCount++;
-//         this->rowsPerBlockCount.emplace_back(pageCounter);
-//         pageCounter = 0;
-//     }
-
-//     if (this->rowCount == 0)
-//         return false;
-//     this->distinctValuesInColumns.clear();
-//     return true;
-// }
 
 /**
  * @brief Given a row of values, this function will update the statistics it

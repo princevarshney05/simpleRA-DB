@@ -297,22 +297,61 @@ void Matrix::updateStatistics(vector<int> row)
  */
 void Matrix::print()
 {
-    logger.log("Matrix::print");
-    uint count = min((long long)PRINT_COUNT, this->rowCount);
-
-    //print headings(not required for matrix)
-    // this->writeRow(this->columns, cout);
-
-    Cursor cursor(this->matrixName, 0, 0);
-    vector<int> row;
-    for (int rowCounter = 0; rowCounter < count; rowCounter++)
+    if (this->sparse)
     {
-        row = cursor.getNext();
-        this->writeRow(row, cout);
-    }
-    printRowCount(this->rowCount);
-}
+        logger.log("Matrix::printSparse");
+        uint count = min((long long)PRINT_COUNT, this->rowCount);
+        Cursor cursor(this->matrixName, 0, 0);
+        vector<int> row;
+        int found = 0;
+        int row_index = 0, column_index = 1;
 
+        for (int rowCounter = 0; rowCounter < count; rowCounter++)
+        {
+            for (int column_counter = 0; column_counter < count; column_counter++)
+            {
+                Cursor cursor(this->matrixName, 0, 0);
+                while (true)
+                {
+                    row = cursor.getNext();
+                    // cout << row.size() << endl;
+                    if (row.size() == 0)
+                    {
+                        found = 0;
+                        break;
+                    }
+                    if (row[row_index] == rowCounter && row[column_index] == column_counter)
+                    {
+                        cout << row[2] << " "; //index of value in row is 2
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found == 0)
+                {
+                    cout << "0 ";
+                }
+            }
+            cout << endl;
+        }
+        printRowCount(this->rowCount);
+    }
+    else
+    {
+        logger.log("Matrix::print");
+        uint count = min((long long)PRINT_COUNT, this->rowCount);
+
+        Cursor cursor(this->matrixName, 0, 0);
+        vector<int> row;
+
+        for (int rowCounter = 0; rowCounter < count; rowCounter++)
+        {
+            row = cursor.getNext();
+            this->writeRow(row, cout);
+        }
+        printRowCount(this->rowCount);
+    }
+}
 /**
  * @brief This function returns one row of the matrix using the cursor object. It
  * returns an empty row is all rows have been read.

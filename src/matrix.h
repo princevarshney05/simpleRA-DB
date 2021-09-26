@@ -66,6 +66,7 @@ public:
     void unload();
     void isSparse(); //checks whether matrix is sparse
     bool blockifySparse();
+    // void writeRowSparse(vector<T> row, ostream &fout);
 
     /**
  * @brief Static function that takes a vector of valued and prints them out in a

@@ -216,10 +216,6 @@ bool Matrix::blockify()
     this->blockCount = this->rowsPerBlockCount.size();
     this->rowBlockCount = ceil(this->rowCount / (double)this->maxDimension);
     this->columnBlockCount = rowBlockCount;
-    //DEBUG
-    // cout << this->blockCount << endl;
-    // cout << this->rowBlockCount << endl;
-    // cout << this->columnBlockCount << endl;
     if (this->rowCount == 0)
         return false;
 
@@ -234,14 +230,13 @@ bool Matrix::blockifySparse()
     ifstream fin(this->sourceFileName, ios::in);
     string line, word;
     int rowPageIndex = 0;
-    int columnPageIndex = 0;
+    int columnPageIndex = 0; // remains zero for sparse ,since column size is fixed(3) for all pages
     int non_zero_elements = 0;
     vector<int> rowOfPage(3); // each row of Page has 3 columns
     int row_number = 0;       //this->rowcount is previously calculated for sparse matrix in isSparse(), so taking another variable
     while (getline(fin, line))
     {
         stringstream s(line);
-        columnPageIndex = 0;
         for (int columnCounter = 0; columnCounter < this->columnCount; columnCounter++)
         {
             if (non_zero_elements == this->maxRowsPerBlock)
@@ -259,15 +254,14 @@ bool Matrix::blockifySparse()
                 rowOfPage[1] = columnCounter;
                 rowOfPage[2] = stoi(word);
                 bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfPage, 3);
+                this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] += 1;
                 non_zero_elements++;
             }
         }
 
         row_number++;
     }
-
-    cout << rowPageIndex << endl;
-    cout << columnPageIndex << endl;
+    this->rowBlockCount = rowPageIndex;
 
     return true;
 }
@@ -447,45 +441,72 @@ int Matrix::getColumnIndex(string columnName)
 
 void Matrix::transpose()
 {
-    int rowPageIndex;
-    int columnPageIndex;
-    for (rowPageIndex = 0; rowPageIndex < this->rowBlockCount; rowPageIndex++)
+    if (this->sparse)
     {
-        for (columnPageIndex = 0; columnPageIndex <= rowPageIndex; columnPageIndex++)
+        logger.log("Matrix:sparseTranspose");
+        int rowPageIndex, columnPageIndex = 0;
+        for (rowPageIndex = 0; rowPageIndex <= this->rowBlockCount; rowPageIndex++)
         {
-            Cursor cursor1(this->matrixName, rowPageIndex, columnPageIndex);
-            Cursor cursor2(this->matrixName, columnPageIndex, rowPageIndex);
-
-            int p1_col = this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}];
-            int p1_row = this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}];
-            int p2_col = this->columnsPerBlockCount[{columnPageIndex, rowPageIndex}];
-            int p2_row = this->rowsPerBlockCount[{columnPageIndex, rowPageIndex}];
-            vector<vector<int>> p1_t(p1_col, vector<int>(p1_row));
-            vector<vector<int>> p2_t(p2_col, vector<int>(p2_row));
-
+            Cursor cursor(this->matrixName, rowPageIndex, columnPageIndex);
+            int i, j;
             vector<int> result;
-            int j;
-            for (int i = 0; i < p1_row; i++)
+            cout << this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] << endl;
+
+            for (i = 0; i < this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}]; i++)
             {
-                j = 0;
-                result = cursor1.getNextTranspose();
-                for (auto &r : result)
-                {
-                    p1_t[j++][i] = r;
-                }
+                result = cursor.getNextTranspose();
+                // read each row as vector : <row,column,value>
+                // store in another vector as : <column, row , value>
+                // write "new vector" through buffer manager
+                cout << endl;
             }
-            for (int i = 0; i < p2_row; i++)
+        }
+        cout << "Sparse" << endl;
+    }
+    else
+    {
+        logger.log("Matrix:transpose");
+        // cout << "Not Sparse" << endl;
+        int rowPageIndex;
+        int columnPageIndex;
+        for (rowPageIndex = 0; rowPageIndex < this->rowBlockCount; rowPageIndex++)
+        {
+            for (columnPageIndex = 0; columnPageIndex <= rowPageIndex; columnPageIndex++)
             {
-                j = 0;
-                result = cursor2.getNextTranspose();
-                for (auto &r : result)
+                Cursor cursor1(this->matrixName, rowPageIndex, columnPageIndex);
+                Cursor cursor2(this->matrixName, columnPageIndex, rowPageIndex);
+
+                int p1_col = this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}];
+                int p1_row = this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}];
+                int p2_col = this->columnsPerBlockCount[{columnPageIndex, rowPageIndex}];
+                int p2_row = this->rowsPerBlockCount[{columnPageIndex, rowPageIndex}];
+                vector<vector<int>> p1_t(p1_col, vector<int>(p1_row));
+                vector<vector<int>> p2_t(p2_col, vector<int>(p2_row));
+
+                vector<int> result;
+                int j;
+                for (int i = 0; i < p1_row; i++)
                 {
-                    p2_t[j++][i] = r;
+                    j = 0;
+                    result = cursor1.getNextTranspose();
+                    for (auto &r : result)
+                    {
+                        p1_t[j++][i] = r;
+                    }
                 }
+                for (int i = 0; i < p2_row; i++)
+                {
+                    j = 0;
+                    result = cursor2.getNextTranspose();
+                    for (auto &r : result)
+                    {
+                        p2_t[j++][i] = r;
+                    }
+                }
+                bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, p2_t);
+                bufferManager.writeMatrixPage(this->matrixName, columnPageIndex, rowPageIndex, p1_t);
+                bufferManager.emptyPages();
             }
-            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, p2_t);
-            bufferManager.writeMatrixPage(this->matrixName, columnPageIndex, rowPageIndex, p1_t);
-            bufferManager.emptyPages();
         }
     }
 }

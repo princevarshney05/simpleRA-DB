@@ -255,7 +255,7 @@ bool Matrix::blockifySparse()
                 rowOfPage[2] = stoi(word);
                 bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, rowOfPage, 3);
                 this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] += 1;
-                this->columnsPerBlockCount[{rowPageIndex,columnPageIndex}] = 3;
+                this->columnsPerBlockCount[{rowPageIndex, columnPageIndex}] = 3;
                 non_zero_elements++;
             }
         }
@@ -452,18 +452,29 @@ void Matrix::transpose()
             Cursor cursor(this->matrixName, rowPageIndex, columnPageIndex);
             int i, j;
             vector<int> result;
-            cout << this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}] << endl;
+            vector<vector<int>> page_rows(this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}], vector<int>(3));
 
             for (i = 0; i < this->rowsPerBlockCount[{rowPageIndex, columnPageIndex}]; i++)
             {
                 result = cursor.getNextTranspose();
-                // read each row as vector : <row,column,value>
-                // store in another vector as : <column, row , value>
-                // write "new vector" through buffer manager
-                cout << endl;
+                j = 0;
+                for (auto &r : result)
+                {
+                    page_rows[i][j++] = r;
+                }
             }
+            int temp;
+            for (int i = 0; i < page_rows.size(); i++)
+            {
+                temp = page_rows[i][0];
+                page_rows[i][0] = page_rows[i][1];
+                page_rows[i][1] = temp;
+            }
+
+            bufferManager.writeMatrixPage(this->matrixName, rowPageIndex, columnPageIndex, page_rows);
+            bufferManager.emptyPages();
         }
-        cout << "Sparse" << endl;
+        cout << "SPARSE MATRIX TRANSPOSED" << endl;
     }
     else
     {
@@ -510,5 +521,6 @@ void Matrix::transpose()
                 bufferManager.emptyPages();
             }
         }
+        cout << "MATRIX TRANSPOSED" << endl;
     }
 }

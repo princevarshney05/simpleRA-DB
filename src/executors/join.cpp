@@ -6,19 +6,28 @@
 bool syntacticParseJOIN()
 {
     logger.log("syntacticParseJOIN");
-    if (tokenizedQuery.size() != 9 || tokenizedQuery[5] != "ON")
+    if (tokenizedQuery.size() != 13 || tokenizedQuery[7] != "ON" || tokenizedQuery[11] != "BUFFER")
     {
-        cout << "SYNTAC ERROR" << endl;
+        cout << "SYNTAX ERROR : Query Size, missing ON or BUFFER" << endl;
         return false;
     }
-    parsedQuery.queryType = JOIN;
-    parsedQuery.joinResultRelationName = tokenizedQuery[0];
-    parsedQuery.joinFirstRelationName = tokenizedQuery[3];
-    parsedQuery.joinSecondRelationName = tokenizedQuery[4];
-    parsedQuery.joinFirstColumnName = tokenizedQuery[6];
-    parsedQuery.joinSecondColumnName = tokenizedQuery[8];
+    if (tokenizedQuery[4] == "NESTED")
+        parsedQuery.queryType = JOIN_NESTED;
+    else if (tokenizedQuery[4] == "PARTHASH")
+        parsedQuery.queryType = JOIN_PARTHASH;
+    else
+    {
+        cout << "SYNTAX ERROR : INVALID JOIN ALGORITHM" << endl;
+        return false;
+    }
 
-    string binaryOperator = tokenizedQuery[7];
+    parsedQuery.joinResultRelationName = tokenizedQuery[0];
+    parsedQuery.joinFirstRelationName = tokenizedQuery[5];
+    parsedQuery.joinSecondRelationName = tokenizedQuery[6];
+    parsedQuery.joinFirstColumnName = tokenizedQuery[8];
+    parsedQuery.joinSecondColumnName = tokenizedQuery[10];
+
+    string binaryOperator = tokenizedQuery[9];
     if (binaryOperator == "<")
         parsedQuery.joinBinaryOperator = LESS_THAN;
     else if (binaryOperator == ">")

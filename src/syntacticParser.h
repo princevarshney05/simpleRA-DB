@@ -84,6 +84,7 @@ public:
     string joinSecondRelationName = "";
     string joinFirstColumnName = "";
     string joinSecondColumnName = "";
+    int joinBuffer = 0;
 
     string loadRelationName = "";
 

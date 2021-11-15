@@ -50,6 +50,7 @@ public:
     Cursor getCursor();
     int getColumnIndex(string columnName);
     void unload();
+    vector<vector<int>>  getRowsFromBlocks(int, int);
 
     /**
  * @brief Static function that takes a vector of valued and prints them out in a

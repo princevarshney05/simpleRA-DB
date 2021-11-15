@@ -235,8 +235,6 @@ void Table::print()
     printRowCount(this->rowCount);
 }
 
-
-
 /**
  * @brief This function returns one row of the table using the cursor object. It
  * returns an empty row is all rows have been read.
@@ -248,13 +246,11 @@ void Table::getNextPage(Cursor *cursor)
 {
     logger.log("Table::getNext");
 
-        if (cursor->pageIndex < this->blockCount - 1)
-        {
-            cursor->nextPage(cursor->pageIndex+1);
-        }
+    if (cursor->pageIndex < this->blockCount - 1)
+    {
+        cursor->nextPage(cursor->pageIndex + 1);
+    }
 }
-
-
 
 /**
  * @brief called when EXPORT command is invoked to move source file to "data"
@@ -264,7 +260,7 @@ void Table::getNextPage(Cursor *cursor)
 void Table::makePermanent()
 {
     logger.log("Table::makePermanent");
-    if(!this->isPermanent())
+    if (!this->isPermanent())
         bufferManager.deleteFile(this->sourceFileName);
     string newSourceFile = "../data/" + this->tableName + ".csv";
     ofstream fout(newSourceFile, ios::out);
@@ -292,7 +288,7 @@ bool Table::isPermanent()
 {
     logger.log("Table::isPermanent");
     if (this->sourceFileName == "../data/" + this->tableName + ".csv")
-    return true;
+        return true;
     return false;
 }
 
@@ -301,7 +297,8 @@ bool Table::isPermanent()
  * all temporary files created as part of this table
  *
  */
-void Table::unload(){
+void Table::unload()
+{
     logger.log("Table::~unload");
     for (int pageCounter = 0; pageCounter < this->blockCount; pageCounter++)
         bufferManager.deleteFile(this->tableName, pageCounter);
@@ -334,4 +331,24 @@ int Table::getColumnIndex(string columnName)
         if (this->columns[columnCounter] == columnName)
             return columnCounter;
     }
+}
+
+vector<vector<int>> Table::getRowsFromBlocks(int startPageindex, int endPageIndex)
+{
+    vector<vector<int>> allRows;
+    vector<int> row;
+
+    for (int pagecounter = startPageindex; pagecounter <= endPageIndex; pagecounter++)
+    {
+        Cursor cursor(this->tableName, pagecounter);
+        for (int rowCounter = 0; rowCounter < this->maxRowsPerBlock; rowCounter++)
+        {
+            row = cursor.getNext();
+            if (row.empty())
+                break;
+            allRows.push_back(row);
+        }
+    }
+
+    return allRows;
 }

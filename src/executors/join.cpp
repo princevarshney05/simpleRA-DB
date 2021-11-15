@@ -26,6 +26,7 @@ bool syntacticParseJOIN()
     parsedQuery.joinSecondRelationName = tokenizedQuery[6];
     parsedQuery.joinFirstColumnName = tokenizedQuery[8];
     parsedQuery.joinSecondColumnName = tokenizedQuery[10];
+    parsedQuery.joinBuffer = stoi(tokenizedQuery[12]);
 
     string binaryOperator = tokenizedQuery[9];
     if (binaryOperator == "<")
@@ -75,5 +76,46 @@ bool semanticParseJOIN()
 void executeJOIN()
 {
     logger.log("executeJOIN");
+    Table *table1 = tableCatalogue.getTable(parsedQuery.joinFirstRelationName);
+    Table *table2 = tableCatalogue.getTable(parsedQuery.joinSecondRelationName);
+    Table *resultTable = new Table(parsedQuery.joinResultRelationName);
+    int bufferSize = parsedQuery.joinBuffer;
+
+    if (parsedQuery.queryType == JOIN_NESTED)
+    {
+        int maxBlocksTable1 = bufferSize - 2;
+        int startPageIndex = 0, endPageIndex = maxBlocksTable1 - 1;
+        vector<vector<int>> allRows;
+        while (1)
+        {
+
+            if (endPageIndex > table1->blockCount - 1)
+                endPageIndex = table1->blockCount - 1;
+
+            allRows = table1->getRowsFromBlocks(startPageIndex, endPageIndex);
+
+            //compare with rows of each block of table2 (1 block at a time)
+            //for match conditions add that row into result table (1 block at a time)
+
+            // -------------
+            for (int i = 0; i < allRows.size(); i++)
+            {
+                for (int j = 0; j < allRows[i].size(); j++)
+                    cout << allRows[i][j] << " ";
+                cout << endl;
+            }
+            // -----------
+
+            startPageIndex += maxBlocksTable1;
+            endPageIndex += maxBlocksTable1;
+
+            allRows.clear();
+            if (startPageIndex >= table1->blockCount)
+                break;
+        }
+    }
+    else if (parsedQuery.queryType == JOIN_PARTHASH)
+    {
+    }
     return;
 }

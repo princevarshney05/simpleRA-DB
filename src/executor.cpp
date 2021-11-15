@@ -17,6 +17,7 @@ void executeCommand(){
         case SELECTION: executeSELECTION(); break;
         case SORT: executeSORT(); break;
         case SOURCE: executeSOURCE(); break;
+        case GROUPBY: executeGROUPBY(); break;
         default: cout<<"PARSING ERROR"<<endl;
     }
 

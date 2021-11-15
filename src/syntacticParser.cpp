@@ -48,6 +48,8 @@ bool syntacticParse()
             return syntacticParseDISTINCT();
         else if (possibleQueryType == "SORT")
             return syntacticParseSORT();
+        else if (possibleQueryType == "GROUP" and tokenizedQuery[3] == "BY")
+            return syntacticParseGROUPBY();
         else
         {
             cout << "SYNTAX ERROR" << endl;
@@ -107,6 +109,12 @@ void ParsedQuery::clear()
     this->selectionFirstColumnName = "";
     this->selectionSecondColumnName = "";
     this->selectionIntLiteral = 0;
+
+    this->groupingFunction = NO_GROUPFUN_CLAUSE;
+    this->groupbyResultRelationName = "";
+    this->groupbyRelationName = "";
+    this->groupByAttribute = "";
+    this->groupbyFunAttribute = "";
 
     this->sortingStrategy = NO_SORT_CLAUSE;
     this->sortResultRelationName = "";

@@ -18,6 +18,7 @@ enum QueryType
     SELECTION,
     SORT,
     SOURCE,
+    GROUPBY,
     UNDETERMINED
 };
 
@@ -44,6 +45,15 @@ enum SelectType
     COLUMN,
     INT_LITERAL,
     NO_SELECT_CLAUSE
+};
+
+enum GroupingFunction
+{
+    MAX,
+    MIN,
+    SUM,
+    AVG,
+    NO_GROUPFUN_CLAUSE
 };
 
 class ParsedQuery
@@ -94,6 +104,12 @@ public:
     string selectionSecondColumnName = "";
     int selectionIntLiteral = 0;
 
+    GroupingFunction groupingFunction = NO_GROUPFUN_CLAUSE;
+    string groupbyResultRelationName = "";
+    string groupbyRelationName = "";
+    string groupByAttribute = "";
+    string groupbyFunAttribute = "";
+
     SortingStrategy sortingStrategy = NO_SORT_CLAUSE;
     string sortResultRelationName = "";
     string sortColumnName = "";
@@ -120,6 +136,7 @@ bool syntacticParseRENAME();
 bool syntacticParseSELECTION();
 bool syntacticParseSORT();
 bool syntacticParseSOURCE();
+bool syntacticParseGROUPBY();
 
 bool isFileExists(string tableName);
 bool isQueryFile(string fileName);

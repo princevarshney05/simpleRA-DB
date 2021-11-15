@@ -3,55 +3,24 @@
 void executeCommand()
 {
 
-    switch (parsedQuery.queryType)
-    {
-    case CLEAR:
-        executeCLEAR();
-        break;
-    case CROSS:
-        executeCROSS();
-        break;
-    case DISTINCT:
-        executeDISTINCT();
-        break;
-    case EXPORT:
-        executeEXPORT();
-        break;
-    case INDEX:
-        executeINDEX();
-        break;
-    case JOIN_NESTED:
-        executeJOIN();
-        break;
-    case JOIN_PARTHASH:
-        executeJOIN();
-        break;
-    case LIST:
-        executeLIST();
-        break;
-    case LOAD:
-        executeLOAD();
-        break;
-    case PRINT:
-        executePRINT();
-        break;
-    case PROJECTION:
-        executePROJECTION();
-        break;
-    case RENAME:
-        executeRENAME();
-        break;
-    case SELECTION:
-        executeSELECTION();
-        break;
-    case SORT:
-        executeSORT();
-        break;
-    case SOURCE:
-        executeSOURCE();
-        break;
-    default:
-        cout << "PARSING ERROR" << endl;
+    switch(parsedQuery.queryType){
+        case CLEAR: executeCLEAR(); break;
+        case CROSS: executeCROSS(); break;
+        case DISTINCT: executeDISTINCT(); break;
+        case EXPORT: executeEXPORT(); break;
+        case INDEX: executeINDEX(); break;
+        case JOIN_NESTED: executeJOIN(); break;
+        case JOIN_PARTHASH: executeJOIN(); break;
+        case LIST: executeLIST(); break;
+        case LOAD: executeLOAD(); break;
+        case PRINT: executePRINT(); break;
+        case PROJECTION: executePROJECTION(); break;
+        case RENAME: executeRENAME(); break;
+        case SELECTION: executeSELECTION(); break;
+        case SORT: executeSORT(); break;
+        case SOURCE: executeSOURCE(); break;
+        case GROUPBY: executeGROUPBY(); break;
+        default: cout<<"PARSING ERROR"<<endl;
     }
 
     return;

@@ -51,6 +51,7 @@ public:
     int getColumnIndex(string columnName);
     void unload();
     vector<vector<int>>  getRowsFromBlocks(int, int);
+    vector<vector<int>>  blockRows(int);
 
     /**
  * @brief Static function that takes a vector of valued and prints them out in a
@@ -68,6 +69,33 @@ void writeRow(vector<T> row, ostream &fout)
         if (columnCounter != 0)
             fout << ", ";
         fout << row[columnCounter];
+    }
+    fout << endl;
+}
+
+/**
+ * @brief Static function that takes a vector of valued and prints them out in a
+ * comma seperated format.
+ *
+ * @tparam T current usaages include int and string
+ * @param row 
+ */
+template <typename T>
+void writeRow(vector<T> row1,vector<T> row2, ostream &fout)
+{
+    logger.log("Table::printRow");
+    for (int columnCounter = 0; columnCounter < row1.size(); columnCounter++)
+    {
+        if (columnCounter != 0)
+            fout << ", ";
+        fout << row1[columnCounter];
+    }
+    fout<<", ";
+    for (int columnCounter = 0; columnCounter < row2.size(); columnCounter++)
+    {
+        if (columnCounter != 0)
+            fout << ", ";
+        fout << row2[columnCounter];
     }
     fout << endl;
 }

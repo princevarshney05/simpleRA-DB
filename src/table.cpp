@@ -333,6 +333,7 @@ int Table::getColumnIndex(string columnName)
     }
 }
 
+//GET rows from given pageindex range
 vector<vector<int>> Table::getRowsFromBlocks(int startPageindex, int endPageIndex)
 {
     vector<vector<int>> allRows;
@@ -348,6 +349,24 @@ vector<vector<int>> Table::getRowsFromBlocks(int startPageindex, int endPageInde
                 break;
             allRows.push_back(row);
         }
+    }
+
+    return allRows;
+}
+
+//GET rows from given pageindex
+vector<vector<int>> Table::blockRows(int pageIndex)
+{
+    vector<vector<int>> allRows;
+    vector<int> row;
+
+    Cursor cursor(this->tableName, pageIndex);
+    for (int rowCounter = 0; rowCounter < this->maxRowsPerBlock; rowCounter++)
+    {
+        row = cursor.getNext();
+        if (row.empty())
+            break;
+        allRows.push_back(row);
     }
 
     return allRows;

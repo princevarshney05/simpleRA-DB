@@ -78,41 +78,62 @@ void executeJOIN()
     logger.log("executeJOIN");
     Table *table1 = tableCatalogue.getTable(parsedQuery.joinFirstRelationName);
     Table *table2 = tableCatalogue.getTable(parsedQuery.joinSecondRelationName);
-    Table *resultTable = new Table(parsedQuery.joinResultRelationName);
     int bufferSize = parsedQuery.joinBuffer;
+    // cout << parsedQuery.joinFirstColumnName << " : index : " << table1->getColumnIndex(parsedQuery.joinFirstColumnName) << endl;
+    // cout << parsedQuery.joinSecondColumnName << " : index : " << table2->getColumnIndex(parsedQuery.joinSecondColumnName) << endl;
+    int firstColumnIndex = table1->getColumnIndex(parsedQuery.joinFirstColumnName);
+    int secondColumnIndex = table2->getColumnIndex(parsedQuery.joinSecondColumnName);
+    vector<string> columns;
+    for (int columnCounter = 0; columnCounter < table1->columnCount; columnCounter++)
+        columns.emplace_back(table1->columns[columnCounter]);
+
+    for (int columnCounter = 0; columnCounter < table2->columnCount; columnCounter++)
+        columns.emplace_back(table2->columns[columnCounter]);
+
+    Table *resultTable = new Table(parsedQuery.joinResultRelationName, columns);
 
     if (parsedQuery.queryType == JOIN_NESTED)
     {
         int maxBlocksTable1 = bufferSize - 2;
         int startPageIndex = 0, endPageIndex = maxBlocksTable1 - 1;
-        vector<vector<int>> allRows;
+        vector<vector<int>> allRows, table2rows;
+
+        ofstream fout(resultTable->sourceFileName, ios::app);
+
         while (1)
         {
 
             if (endPageIndex > table1->blockCount - 1)
                 endPageIndex = table1->blockCount - 1;
 
+            //get all rows from set of blocks from outer relation
             allRows = table1->getRowsFromBlocks(startPageIndex, endPageIndex);
 
             //compare with rows of each block of table2 (1 block at a time)
             //for match conditions add that row into result table (1 block at a time)
-
-            // -------------
-            for (int i = 0; i < allRows.size(); i++)
+            // getting tuples from each block of table2:
+            for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
             {
-                for (int j = 0; j < allRows[i].size(); j++)
-                    cout << allRows[i][j] << " ";
-                cout << endl;
+                table2rows = table2->blockRows(blockNo);
+                for (int i = 0; i < allRows.size(); i++)
+                    for (int j = 0; j < table2rows.size(); j++)
+                        if (allRows[i][firstColumnIndex] == table2rows[j][secondColumnIndex])
+                            resultTable->writeRow<int>(allRows[i], table2rows[j], fout);
+                table2rows.clear();
             }
-            // -----------
 
             startPageIndex += maxBlocksTable1;
             endPageIndex += maxBlocksTable1;
 
+            table2rows.clear();
             allRows.clear();
             if (startPageIndex >= table1->blockCount)
                 break;
         }
+        fout.close();
+
+        if (resultTable->blockify())
+            tableCatalogue.insertTable(resultTable);
     }
     else if (parsedQuery.queryType == JOIN_PARTHASH)
     {

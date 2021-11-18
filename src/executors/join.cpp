@@ -79,14 +79,12 @@ void executeJOIN()
     Table *table1 = tableCatalogue.getTable(parsedQuery.joinFirstRelationName);
     Table *table2 = tableCatalogue.getTable(parsedQuery.joinSecondRelationName);
     int bufferSize = parsedQuery.joinBuffer;
-    // cout << parsedQuery.joinFirstColumnName << " : index : " << table1->getColumnIndex(parsedQuery.joinFirstColumnName) << endl;
-    // cout << parsedQuery.joinSecondColumnName << " : index : " << table2->getColumnIndex(parsedQuery.joinSecondColumnName) << endl;
     int firstColumnIndex = table1->getColumnIndex(parsedQuery.joinFirstColumnName);
     int secondColumnIndex = table2->getColumnIndex(parsedQuery.joinSecondColumnName);
+
     vector<string> columns;
     for (int columnCounter = 0; columnCounter < table1->columnCount; columnCounter++)
         columns.emplace_back(table1->columns[columnCounter]);
-
     for (int columnCounter = 0; columnCounter < table2->columnCount; columnCounter++)
         columns.emplace_back(table2->columns[columnCounter]);
 
@@ -131,12 +129,100 @@ void executeJOIN()
                 break;
         }
         fout.close();
-
         if (resultTable->blockify())
             tableCatalogue.insertTable(resultTable);
     }
     else if (parsedQuery.queryType == JOIN_PARTHASH)
     {
+
+        int M = bufferSize - 1; // M : Bucket Size
+        vector<vector<vector<int>>> hashedTable1(M);
+        vector<int> BucketBlocks1(M, 0);          // no of blocks of each bucket
+        vector<int> rowsInCurrentBucket1(M, 0);   //rows in current block of bucket
+        vector<vector<int>> rowsInEachBucket1(M); //final no of rows in each bucket block
+        set<int> bucketIds1;                      // list of bucket Ids
+
+        // splitting Table1 into M buckets
+        for (int blockNo = 0; blockNo < table1->blockCount; blockNo++)
+        {
+            vector<vector<int>> blockRows = table1->blockRows(blockNo);
+            for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
+            {
+                int bucketId = blockRows[rowNo][firstColumnIndex] % M;
+                bucketIds1.insert(bucketId);
+                hashedTable1[bucketId].push_back(blockRows[rowNo]);
+                rowsInCurrentBucket1[bucketId]++;
+                if (rowsInCurrentBucket1[bucketId] == table1->maxRowsPerBlock)
+                {
+                    string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
+                    bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
+                    BucketBlocks1[bucketId]++;
+                    rowsInCurrentBucket1[bucketId] = 0;
+                    rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
+                    hashedTable1[bucketId].clear();
+                }
+            }
+        }
+
+        //writing left over blocks(with <maxRowsPerBlock) into buffer.
+        for (auto bucketId : bucketIds1)
+        {
+            if (rowsInCurrentBucket1[bucketId] > 0)
+            {
+                string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
+                bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
+                BucketBlocks1[bucketId]++;
+                rowsInCurrentBucket1[bucketId] = 0;
+                rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
+                hashedTable1[bucketId].clear();
+            }
+        }
+
+        hashedTable1.clear();
+
+        vector<vector<vector<int>>> hashedTable2(M);
+        vector<int> BucketBlocks2(M, 0);          // no of blocks of each bucket
+        vector<int> rowsInCurrentBucket2(M, 0);   //rows in current block of bucket
+        vector<vector<int>> rowsInEachBucket2(M); //final no of rows in each bucket block
+        set<int> bucketIds2;                      // list of bucket Ids
+
+        // splitting Table2 into M buckets
+        for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
+        {
+            vector<vector<int>> blockRows = table2->blockRows(blockNo);
+            for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
+            {
+                int bucketId = blockRows[rowNo][firstColumnIndex] % M;
+                bucketIds2.insert(bucketId);
+                hashedTable2[bucketId].push_back(blockRows[rowNo]);
+                rowsInCurrentBucket2[bucketId]++;
+                if (rowsInCurrentBucket2[bucketId] == table2->maxRowsPerBlock)
+                {
+                    string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
+                    bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
+                    BucketBlocks2[bucketId]++;
+                    rowsInCurrentBucket2[bucketId] = 0;
+                    rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
+                    hashedTable2[bucketId].clear();
+                }
+            }
+        }
+
+        //writing left over blocks(with <maxRowsPerBlock) into buffer.
+        for (auto bucketId : bucketIds2)
+        {
+            if (rowsInCurrentBucket2[bucketId] > 0)
+            {
+                string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
+                bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
+                BucketBlocks2[bucketId]++;
+                rowsInCurrentBucket2[bucketId] = 0;
+                rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
+                hashedTable2[bucketId].clear();
+            }
+        }
+
+        hashedTable2.clear();
     }
     return;
 }

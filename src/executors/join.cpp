@@ -89,14 +89,14 @@ void executeJOIN()
         columns.emplace_back(table2->columns[columnCounter]);
 
     Table *resultTable = new Table(parsedQuery.joinResultRelationName, columns);
+    ofstream fout(resultTable->sourceFileName, ios::app);
 
+    int BLOCK_ACCESS = 0;
     if (parsedQuery.queryType == JOIN_NESTED)
     {
         int maxBlocksTable1 = bufferSize - 2;
         int startPageIndex = 0, endPageIndex = maxBlocksTable1 - 1;
         vector<vector<int>> allRows, table2rows;
-
-        ofstream fout(resultTable->sourceFileName, ios::app);
 
         while (1)
         {
@@ -106,12 +106,14 @@ void executeJOIN()
 
             //get all rows from set of blocks from outer relation
             allRows = table1->getRowsFromBlocks(startPageIndex, endPageIndex);
+            BLOCK_ACCESS += endPageIndex - startPageIndex + 1;
 
             //compare with rows of each block of table2 (1 block at a time)
             //for match conditions add that row into result table (1 block at a time)
             // getting tuples from each block of table2:
             for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
             {
+                BLOCK_ACCESS++;
                 table2rows = table2->blockRows(blockNo);
                 for (int i = 0; i < allRows.size(); i++)
                     for (int j = 0; j < table2rows.size(); j++)
@@ -145,6 +147,7 @@ void executeJOIN()
         // splitting Table1 into M buckets
         for (int blockNo = 0; blockNo < table1->blockCount; blockNo++)
         {
+            BLOCK_ACCESS++;
             vector<vector<int>> blockRows = table1->blockRows(blockNo);
             for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
             {
@@ -157,8 +160,8 @@ void executeJOIN()
                     string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
                     bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
                     BucketBlocks1[bucketId]++;
-                    rowsInCurrentBucket1[bucketId] = 0;
                     rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
+                    rowsInCurrentBucket1[bucketId] = 0;
                     hashedTable1[bucketId].clear();
                 }
             }
@@ -172,8 +175,8 @@ void executeJOIN()
                 string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
                 bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
                 BucketBlocks1[bucketId]++;
-                rowsInCurrentBucket1[bucketId] = 0;
                 rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
+                rowsInCurrentBucket1[bucketId] = 0;
                 hashedTable1[bucketId].clear();
             }
         }
@@ -189,6 +192,7 @@ void executeJOIN()
         // splitting Table2 into M buckets
         for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
         {
+            BLOCK_ACCESS++;
             vector<vector<int>> blockRows = table2->blockRows(blockNo);
             for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
             {
@@ -201,8 +205,8 @@ void executeJOIN()
                     string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
                     bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
                     BucketBlocks2[bucketId]++;
-                    rowsInCurrentBucket2[bucketId] = 0;
                     rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
+                    rowsInCurrentBucket2[bucketId] = 0;
                     hashedTable2[bucketId].clear();
                 }
             }
@@ -216,13 +220,108 @@ void executeJOIN()
                 string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
                 bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
                 BucketBlocks2[bucketId]++;
-                rowsInCurrentBucket2[bucketId] = 0;
                 rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
+                rowsInCurrentBucket2[bucketId] = 0;
                 hashedTable2[bucketId].clear();
             }
         }
 
         hashedTable2.clear();
+        vector<vector<int>> outerRows;
+        int outerRelation = 0;
+        vector<int> innerRow;
+        for (int bucketId = 0; bucketId < M; bucketId++)
+        {
+            if (bucketIds1.count(bucketId) && bucketIds2.count(bucketId))
+            {
+                if (BucketBlocks1[bucketId] < BucketBlocks2[bucketId])
+                {
+                    outerRelation = 1;
+                    string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
+                    bucket_columns_count = table1->columns.size();
+                    bucket_maxRowsPerBlock_count = table1->maxRowsPerBlock;
+                    for (int j = 0; j < BucketBlocks1[bucketId]; j++)
+                    {
+                        bucket_rows_count = rowsInEachBucket1[bucketId][j];
+                        Page currentPage = bufferManager.getPage(BucketName, j);
+                        for (int k = 0; k < bucket_rows_count; k++)
+                        {
+                            vector<int> row = currentPage.getRow(k);
+                            outerRows.push_back(row);
+                            row.clear();
+                        }
+                    }
+
+                    string innerBucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
+                    bucket_columns_count = table2->columns.size();
+                    bucket_maxRowsPerBlock_count = table2->maxRowsPerBlock;
+
+                    for (int i = 0; i < BucketBlocks2[bucketId]; i++)
+                    {
+                        bucket_rows_count = rowsInEachBucket2[bucketId][i];
+                        Page currentPage = bufferManager.getPage(innerBucketName, i);
+                        for (int k = 0; k < bucket_rows_count; k++)
+                        {
+                            innerRow = currentPage.getRow(k);
+                            for (auto outerRow : outerRows)
+                            {
+                                if (outerRow[firstColumnIndex] == innerRow[secondColumnIndex])
+                                {
+                                    resultTable->writeRow(outerRow, innerRow, fout);
+                                }
+                            }
+                            innerRow.clear();
+                        }
+                    }
+                }
+                else
+                {
+                    outerRelation = 2;
+                    string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
+                    bucket_columns_count = table2->columns.size();
+                    bucket_maxRowsPerBlock_count = table2->maxRowsPerBlock;
+                    for (int j = 0; j < BucketBlocks2[bucketId]; j++)
+                    {
+                        bucket_rows_count = rowsInEachBucket2[bucketId][j];
+                        Page currentPage = bufferManager.getPage(BucketName, j);
+                        for (int k = 0; k < bucket_rows_count; k++)
+                        {
+                            vector<int> row = currentPage.getRow(k);
+                            outerRows.push_back(row);
+                            row.clear();
+                        }
+                    }
+
+                    string innerBucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
+                    bucket_columns_count = table1->columns.size();
+                    bucket_maxRowsPerBlock_count = table1->maxRowsPerBlock;
+
+                    for (int i = 0; i < BucketBlocks1[bucketId]; i++)
+                    {
+                        bucket_rows_count = rowsInEachBucket1[bucketId][i];
+                        Page currentPage = bufferManager.getPage(innerBucketName, i);
+                        for (int k = 0; k < bucket_rows_count; k++)
+                        {
+                            innerRow = currentPage.getRow(k);
+                            for (auto outerRow : outerRows)
+                            {
+                                if (outerRow[secondColumnIndex] == innerRow[firstColumnIndex])
+                                {
+                                    resultTable->writeRow(innerRow, outerRow, fout);
+                                }
+                            }
+                            innerRow.clear();
+                        }
+                    }
+                }
+            }
+        }
+
+        fout.close();
+        if (resultTable->blockify())
+            tableCatalogue.insertTable(resultTable);
     }
+
+    cout << BLOCK_ACCESS << endl;
     return;
 }

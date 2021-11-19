@@ -31,14 +31,23 @@ Page::Page(string tableName, int pageIndex)
     this->tableName = tableName;
     this->pageIndex = pageIndex;
     this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
-    Table table = *tableCatalogue.getTable(tableName);
-    this->columnCount = table.columnCount;
-    uint maxRowCount = table.maxRowsPerBlock;
+    uint maxRowCount = 0;
+    if (tableCatalogue.isTable(tableName))
+    {
+        Table table = *tableCatalogue.getTable(tableName);
+        this->columnCount = table.columnCount;
+        maxRowCount = table.maxRowsPerBlock;
+        this->rowCount = table.rowsPerBlockCount[pageIndex];
+    }
+    else
+    {
+        this->columnCount = bucket_columns_count;
+        maxRowCount = bucket_maxRowsPerBlock_count;
+        this->rowCount = bucket_rows_count;
+    }
     vector<int> row(columnCount, 0);
     this->rows.assign(maxRowCount, row);
-
     ifstream fin(pageName, ios::in);
-    this->rowCount = table.rowsPerBlockCount[pageIndex];
     int number;
     for (uint rowCounter = 0; rowCounter < this->rowCount; rowCounter++)
     {
@@ -75,7 +84,7 @@ Page::Page(string tableName, int pageIndex, vector<vector<int>> rows, int rowCou
     this->rows = rows;
     this->rowCount = rowCount;
     this->columnCount = rows[0].size();
-    this->pageName = "../data/temp/"+this->tableName + "_Page" + to_string(pageIndex);
+    this->pageName = "../data/temp/" + this->tableName + "_Page" + to_string(pageIndex);
 }
 
 /**

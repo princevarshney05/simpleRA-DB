@@ -91,7 +91,8 @@ void executeJOIN()
     Table *resultTable = new Table(parsedQuery.joinResultRelationName, columns);
     ofstream fout(resultTable->sourceFileName, ios::app);
 
-    int BLOCK_ACCESS = 0;
+    BLOCK_ACCESS_READ = 0;
+    BLOCK_ACCESS_WRITE = 0;
     if (parsedQuery.queryType == JOIN_NESTED)
     {
         int maxBlocksTable1 = bufferSize - 2;
@@ -106,14 +107,14 @@ void executeJOIN()
 
             //get all rows from set of blocks from outer relation
             allRows = table1->getRowsFromBlocks(startPageIndex, endPageIndex);
-            BLOCK_ACCESS += endPageIndex - startPageIndex + 1;
+            // BLOCK_ACCESS_READ += endPageIndex - startPageIndex + 1;
 
             //compare with rows of each block of table2 (1 block at a time)
             //for match conditions add that row into result table (1 block at a time)
             // getting tuples from each block of table2:
             for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
             {
-                BLOCK_ACCESS++;
+                // BLOCK_ACCESS_READ++;
                 table2rows = table2->blockRows(blockNo);
                 for (int i = 0; i < allRows.size(); i++)
                     for (int j = 0; j < table2rows.size(); j++)
@@ -147,7 +148,7 @@ void executeJOIN()
         // splitting Table1 into M buckets
         for (int blockNo = 0; blockNo < table1->blockCount; blockNo++)
         {
-            BLOCK_ACCESS++;
+            // BLOCK_ACCESS_READ++;
             vector<vector<int>> blockRows = table1->blockRows(blockNo);
             for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
             {
@@ -159,6 +160,7 @@ void executeJOIN()
                 {
                     string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
                     bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
+                    // BLOCK_ACCESS_WRITE--;
                     BucketBlocks1[bucketId]++;
                     rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
                     rowsInCurrentBucket1[bucketId] = 0;
@@ -174,6 +176,7 @@ void executeJOIN()
             {
                 string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
                 bufferManager.writePage(BucketName, BucketBlocks1[bucketId], hashedTable1[bucketId], rowsInCurrentBucket1[bucketId]);
+                // BLOCK_ACCESS_WRITE--;
                 BucketBlocks1[bucketId]++;
                 rowsInEachBucket1[bucketId].push_back(rowsInCurrentBucket1[bucketId]);
                 rowsInCurrentBucket1[bucketId] = 0;
@@ -192,7 +195,7 @@ void executeJOIN()
         // splitting Table2 into M buckets
         for (int blockNo = 0; blockNo < table2->blockCount; blockNo++)
         {
-            BLOCK_ACCESS++;
+            // BLOCK_ACCESS_READ++;
             vector<vector<int>> blockRows = table2->blockRows(blockNo);
             for (int rowNo = 0; rowNo < blockRows.size(); rowNo++)
             {
@@ -204,6 +207,7 @@ void executeJOIN()
                 {
                     string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
                     bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
+                    // BLOCK_ACCESS_WRITE--;
                     BucketBlocks2[bucketId]++;
                     rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
                     rowsInCurrentBucket2[bucketId] = 0;
@@ -219,6 +223,7 @@ void executeJOIN()
             {
                 string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
                 bufferManager.writePage(BucketName, BucketBlocks2[bucketId], hashedTable2[bucketId], rowsInCurrentBucket2[bucketId]);
+                // BLOCK_ACCESS_WRITE--;
                 BucketBlocks2[bucketId]++;
                 rowsInEachBucket2[bucketId].push_back(rowsInCurrentBucket2[bucketId]);
                 rowsInCurrentBucket2[bucketId] = 0;
@@ -228,7 +233,6 @@ void executeJOIN()
 
         hashedTable2.clear();
         vector<vector<int>> outerRows;
-        int outerRelation = 0;
         vector<int> innerRow;
         for (int bucketId = 0; bucketId < M; bucketId++)
         {
@@ -236,7 +240,6 @@ void executeJOIN()
             {
                 if (BucketBlocks1[bucketId] < BucketBlocks2[bucketId])
                 {
-                    outerRelation = 1;
                     string BucketName = "Bkt_" + table1->tableName + "_" + to_string(bucketId);
                     bucket_columns_count = table1->columns.size();
                     bucket_maxRowsPerBlock_count = table1->maxRowsPerBlock;
@@ -276,7 +279,6 @@ void executeJOIN()
                 }
                 else
                 {
-                    outerRelation = 2;
                     string BucketName = "Bkt_" + table2->tableName + "_" + to_string(bucketId);
                     bucket_columns_count = table2->columns.size();
                     bucket_maxRowsPerBlock_count = table2->maxRowsPerBlock;
@@ -322,6 +324,8 @@ void executeJOIN()
             tableCatalogue.insertTable(resultTable);
     }
 
-    cout << BLOCK_ACCESS << endl;
+    cout << "BLocks Read : " << BLOCK_ACCESS_READ << endl;
+    cout << "BLocks Written : " << BLOCK_ACCESS_WRITE << endl;
+    cout << "Total BLocks Accessed : " << BLOCK_ACCESS_WRITE + BLOCK_ACCESS_READ << endl;
     return;
 }

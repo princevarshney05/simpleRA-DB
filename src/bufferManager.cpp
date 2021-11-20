@@ -15,6 +15,7 @@ BufferManager::BufferManager()
  */
 Page BufferManager::getPage(string tableName, int pageIndex)
 {
+    BLOCK_ACCESS_READ++;
     logger.log("BufferManager::getPage");
     string pageName = "../data/temp/"+tableName + "_Page" + to_string(pageIndex);
     if (this->inPool(pageName))
@@ -87,6 +88,7 @@ Page BufferManager::insertIntoPool(string tableName, int pageIndex)
  */
 void BufferManager::writePage(string tableName, int pageIndex, vector<vector<int>> rows, int rowCount)
 {
+    BLOCK_ACCESS_WRITE++;
     logger.log("BufferManager::writePage");
     Page page(tableName, pageIndex, rows, rowCount);
     page.writePage();

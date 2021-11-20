@@ -9,6 +9,8 @@ uint PRINT_COUNT = 20;
 uint bucket_rows_count = 0;
 uint bucket_columns_count = 0;
 uint bucket_maxRowsPerBlock_count = 0;
+uint BLOCK_ACCESS_READ = 0;
+uint BLOCK_ACCESS_WRITE = 0;
 Logger logger;
 vector<string> tokenizedQuery;
 ParsedQuery parsedQuery;

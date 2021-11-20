@@ -125,6 +125,8 @@ int findValue(GroupingFunction groupingFunction,groupByHash hs,int key){
 void executeGROUPBY(){
     logger.log("executeGROUPBY");
 
+    BLOCK_ACCESS_WRITE=0;
+
     Table table = *tableCatalogue.getTable(parsedQuery.groupbyRelationName);
     string col1 = parsedQuery.groupByAttribute;
     string col2 = EnumToSTring(parsedQuery.groupingFunction) + parsedQuery.groupbyFunAttribute;
@@ -171,5 +173,9 @@ void executeGROUPBY(){
         resultantTable->unload();
         delete resultantTable;
     }
+
+    cout<<"Blocks Read : "<<BLOCK_ACCESS_READ<<endl;
+    cout<<"Blocks Written : "<<BLOCK_ACCESS_WRITE<<endl;
+    cout<<"Total blocks Accessed : "<<BLOCK_ACCESS_READ + BLOCK_ACCESS_WRITE<<endl;
     return;
 }

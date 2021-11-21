@@ -125,7 +125,8 @@ int findValue(GroupingFunction groupingFunction,groupByHash hs,int key){
 void executeGROUPBY(){
     logger.log("executeGROUPBY");
 
-    BLOCK_ACCESS_WRITE=0;
+    BLOCK_ACCESS_READ = 0;
+    BLOCK_ACCESS_WRITE = 0;
 
     Table table = *tableCatalogue.getTable(parsedQuery.groupbyRelationName);
     string col1 = parsedQuery.groupByAttribute;

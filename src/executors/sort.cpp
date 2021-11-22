@@ -120,7 +120,12 @@ void executeSORT(){
         int remainingPages = table.blockCount - pageIndex;
         int pagesToRead = min(remainingPages,bs);
         vector<vector<int>> rows;
-        Table* partitionTable = new Table((string)"Partition"+to_string(counter), table.columns);
+        string tablename;
+        if(sortingPhaseIterations == 1)
+            tablename = parsedQuery.sortResultRelationName;
+        else 
+            tablename = (string)"Partition"+to_string(counter);
+        Table* partitionTable = new Table(tablename, table.columns);
         for(int pageCounter = 0;pageCounter < pagesToRead; pageCounter++){
             vector<vector<int>> temp;
             vector<int> row;
@@ -230,6 +235,9 @@ void executeSORT(){
         numberOfSortedFilesOld = numberOfSortedFilesNew;
         counter++;
     }
+
+    
+
     cout<<"Blocks Read : "<<BLOCK_READ_ACCESS<<endl;
     cout<<"Blocks Written : "<<BLOCK_WRITE_ACCESS<<endl;
     cout<<"Total blocks Accessed : "<<BLOCK_READ_ACCESS+ BLOCK_WRITE_ACCESS<<endl;

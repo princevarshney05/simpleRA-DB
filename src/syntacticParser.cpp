@@ -112,6 +112,8 @@ void ParsedQuery::clear()
     this->sortResultRelationName = "";
     this->sortColumnName = "";
     this->sortRelationName = "";
+    this->sortBufferSize = 10;
+    
 
     this->sourceFileName = "";
 }

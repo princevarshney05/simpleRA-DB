@@ -9,6 +9,11 @@ Cursor::Cursor(string tableName, int pageIndex)
     this->pageIndex = pageIndex;
 }
 
+Cursor::Cursor()
+{
+    logger.log("Cursor::Cursor");
+}
+
 /**
  * @brief This function reads the next row from the page. The index of the
  * current row read from the page is indicated by the pagePointer(points to row

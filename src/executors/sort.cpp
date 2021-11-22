@@ -80,22 +80,35 @@ bool compareRows(vector<int> &r1,vector<int> &r2){
     }
 }
 
-void blockify(vector<vector<int>> &rows,int partitionId, int rowLimit){
-    int numberOfPages = ceil(rows.size()/(double)rowLimit);
-    auto start = rows.begin();
-    auto end = start + min(rowLimit,(int)(rows.end()-start));
-    for(int i=0;i<numberOfPages;i++){
-        vector<vector<int>> partition(start,end);
-        bufferManager.writePage((string)"Partition"+to_string(partitionId),i,partition,partition.size());
-        start = end;
-        end =  start + min(rowLimit,(int)(rows.end()-start));
+struct my_comparator
+{
+    // queue elements are vectors so we need to compare those
+    bool operator()(std::vector<int> const& r1, std::vector<int> const& r2) const
+    {   
+        int val1 = r1[sortColumnIndex];
+        int val2 = r2[sortColumnIndex];
+        SortingStrategy strategy = parsedQuery.sortingStrategy;
+
+        switch (strategy)
+        {
+            case ASC: return val1 > val2;
+            case DESC: return val1 < val2;
+        }
+        
     }
+};
+
+double logAnyBase(double x,double base){
+    return log(x)/log(base);
 }
+
+
 
 void executeSORT(){
     logger.log("executeSORT");
+    BLOCK_READ_ACCESS = 0;
+    BLOCK_WRITE_ACCESS = 0;
     Table table = *tableCatalogue.getTable(parsedQuery.sortRelationName);
-    Table* resultantTable = new Table(parsedQuery.sortResultRelationName, table.columns);
     sortColumnIndex = table.getColumnIndex(parsedQuery.sortColumnName);
     Cursor cursor = table.getCursor();
     
@@ -107,6 +120,7 @@ void executeSORT(){
         int remainingPages = table.blockCount - pageIndex;
         int pagesToRead = min(remainingPages,bs);
         vector<vector<int>> rows;
+        Table* partitionTable = new Table((string)"Partition"+to_string(counter), table.columns);
         for(int pageCounter = 0;pageCounter < pagesToRead; pageCounter++){
             vector<vector<int>> temp;
             vector<int> row;
@@ -118,11 +132,107 @@ void executeSORT(){
             pageIndex += 1;
         }
         sort(rows.begin(),rows.end(),compareRows);
-        blockify(rows,counter,table.maxRowsPerBlock);
+
+        for(auto &r:rows){
+            partitionTable->writeRow(r);
+        }
+
+        if(partitionTable->blockify())
+            tableCatalogue.insertTable(partitionTable);
+        else{
+            cout<<"Empty Table"<<endl;
+            partitionTable->unload();
+            delete partitionTable;
+        }
         counter += 1;
         
     }
 
+
+    int mergingPhaseIterations = ceil(logAnyBase((double)sortingPhaseIterations,(double)(bs-1)));
+    counter = 0;
+    int numberOfSortedFilesOld = sortingPhaseIterations;
+    int numberOfSortedFilesNew;
+    
+    
+    using pq = priority_queue<vector<int>,vector<vector<int>>,my_comparator>;
+    while(counter < mergingPhaseIterations){
+        numberOfSortedFilesNew = ceil(numberOfSortedFilesOld/(double)(bs-1));
+        int partitionIndex = 0;
+        int innerCounter = 0;
+        while(innerCounter<numberOfSortedFilesNew){
+            string tablename;
+            if(counter == mergingPhaseIterations-1)
+                tablename = parsedQuery.sortResultRelationName;
+            else 
+                tablename = (string)"Merge"+to_string(counter)+to_string(innerCounter);
+            Table* partitionTable = new Table(tablename, table.columns);
+
+            int remainingFiles = numberOfSortedFilesOld - partitionIndex;
+            int filesToRead = min(remainingFiles,bs-1);
+
+        
+            vector<Table> oldTables(filesToRead);
+            vector<Cursor> oldTablesCursor(filesToRead);
+            vector<bool> completed(filesToRead);
+            
+            for(int i = 0;i<filesToRead;i++){
+                if(counter == 0)
+                    oldTables[i] = *tableCatalogue.getTable((string)"Partition"+to_string(partitionIndex));
+                else 
+                     oldTables[i] = *tableCatalogue.getTable((string)"Merge"+to_string(counter-1)+to_string(partitionIndex));
+                oldTablesCursor[i] = oldTables[i].getCursor();
+                completed[i] = false;
+                partitionIndex++;
+            }
+            pq potentialRows;
+            vector<int> row;
+            while(count(completed.begin(),completed.end(),false) != 0){
+                
+                
+                for(int i=0;i<filesToRead;i++){
+                    if(!completed[i]){
+                        row = oldTablesCursor[i].getNext();
+                        if(row.empty()){
+                            completed[i] = true;
+                        }
+                        else{
+                            potentialRows.push(row);
+                        }
+                    }
+                }
+                if(!potentialRows.empty()){
+                    partitionTable->writeRow(potentialRows.top());
+                    potentialRows.pop();
+                }
+                
+            }
+
+            while(!potentialRows.empty()){
+                partitionTable->writeRow(potentialRows.top());
+                potentialRows.pop();
+            }
+
+            for(int i=0;i<filesToRead;i++){
+                oldTables[i].unload();
+            }
+
+
+            if(partitionTable->blockify())
+                tableCatalogue.insertTable(partitionTable);
+            else{
+                cout<<"Empty Table"<<endl;
+                partitionTable->unload();
+                delete partitionTable;
+            }
+            innerCounter++;
+        }
+        numberOfSortedFilesOld = numberOfSortedFilesNew;
+        counter++;
+    }
+    cout<<"Blocks Read : "<<BLOCK_READ_ACCESS<<endl;
+    cout<<"Blocks Written : "<<BLOCK_WRITE_ACCESS<<endl;
+    cout<<"Total blocks Accessed : "<<BLOCK_READ_ACCESS+ BLOCK_WRITE_ACCESS<<endl;
     return;
 }
 
